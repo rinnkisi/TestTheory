@@ -906,8 +906,16 @@ SQL;
 			'alias' => 'TimestampDefaultValue'
 		));
 		$result = $this->Dbo->describe($model);
-		$this->assertEquals('', $result['limit_date']['default']);
 		$this->Dbo->execute('DROP TABLE ' . $name);
+
+		$this->assertNull($result['limit_date']['default']);
+
+		$schema = new CakeSchema(array(
+			'connection' => 'test',
+			'testdescribes' => $result
+		));
+		$result = $this->Dbo->createSchema($schema);
+		$this->assertContains('`limit_date` timestamp NOT NULL,', $result);
 	}
 
 /**
@@ -1267,7 +1275,7 @@ SQL;
  * @param Model $model
  * @param array $queryData
  * @param array $binding
- * @return void
+ * @return array The prepared association query
  */
 	protected function &_prepareAssociationQuery(Model $model, &$queryData, $binding) {
 		$type = $binding['type'];
@@ -3425,6 +3433,35 @@ SQL;
 			"(SELECT COUNT(*) FROM $commentsTable WHERE `Article`.`id` = `$commentsTable`.`article_id`) AS  `Article__comment_count`"
 		);
 		$this->assertEquals($expected, $result);
+	}
+
+/**
+ * test find() generating usable virtual fields to use in query without modifying custom subqueries.
+ *
+ * @return void
+ */
+	public function testVirtualFieldsWithSubquery() {
+		$this->loadFixtures('Article', 'Comment', 'User', 'Tag', 'ArticlesTag');
+		$this->Dbo->virtualFieldSeparator = '__';
+		$Article = ClassRegistry::init('Article');
+		$commentsTable = $this->Dbo->fullTableName('comments', false, false);
+		$Article->Comment->virtualFields = array(
+			'extra' => 'SELECT id FROM ' . $commentsTable . ' WHERE id = (SELECT 1)',
+		);
+		$conditions = array('Article.id' => array(1, 2));
+		$contain = array('Comment.extra');
+
+		$test = ConnectionManager::getDatasource('test');
+		$test->getLog();
+		$result = $Article->find('all', compact('conditions', 'contain'));
+
+		$expected = 'SELECT `Comment`.`id`, `Comment`.`article_id`, `Comment`.`user_id`, `Comment`.`comment`,' .
+			' `Comment`.`published`, `Comment`.`created`,' .
+			' `Comment`.`updated`, (SELECT id FROM comments WHERE id = (SELECT 1)) AS  `Comment__extra`' .
+			' FROM ' . $test->fullTableName('comments') . ' AS `Comment`   WHERE `Comment`.`article_id` IN (1, 2)';
+
+		$log = $test->getLog();
+		$this->assertTextEquals($expected, $log['log'][count($log['log']) - 2]['query']);
 	}
 
 /**

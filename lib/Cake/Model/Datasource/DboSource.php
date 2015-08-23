@@ -396,7 +396,7 @@ class DboSource extends DataSource {
  *
  * @param string $sql SQL statement
  * @param array $params Additional options for the query.
- * @return bool
+ * @return mixed Resource or object representing the result set, or false on failure
  */
 	public function rawQuery($sql, $params = array()) {
 		$this->took = $this->numRows = false;
@@ -834,9 +834,7 @@ class DboSource extends DataSource {
 				$matches[1] . '(' . $this->name($matches[2]) . ')'
 			);
 		}
-		if (
-			preg_match('/^([\w-]+(\.[\w-]+|\(.*\))*)\s+' . preg_quote($this->alias) . '\s*([\w-]+)$/i', $data, $matches
-		)) {
+		if (preg_match('/^([\w-]+(\.[\w-]+|\(.*\))*)\s+' . preg_quote($this->alias) . '\s*([\w-]+)$/i', $data, $matches)) {
 			return $this->cacheMethod(
 				__FUNCTION__, $cacheKey,
 				preg_replace(
@@ -1313,8 +1311,7 @@ class DboSource extends DataSource {
 				$assocResultSet = array();
 				$prefetched = false;
 
-				if (
-					($type === 'hasOne' || $type === 'belongsTo') &&
+				if (($type === 'hasOne' || $type === 'belongsTo') &&
 					isset($row[$LinkModel->alias], $joined[$Model->alias]) &&
 					in_array($LinkModel->alias, $joined[$Model->alias])
 				) {
@@ -1337,8 +1334,7 @@ class DboSource extends DataSource {
 						foreach ($LinkModel->{$type1} as $assoc1 => $assocData1) {
 							$DeepModel = $LinkModel->{$assoc1};
 
-							if (
-								$type1 === 'belongsTo' ||
+							if ($type1 === 'belongsTo' ||
 								($type === 'belongsTo' && $DeepModel->alias === $modelAlias) ||
 								($DeepModel->alias !== $modelAlias)
 							) {
@@ -1410,11 +1406,10 @@ class DboSource extends DataSource {
 	protected function _fetchHasMany(Model $Model, $query, $ids) {
 		$ids = array_unique($ids);
 
-		$query = str_replace('{$__cakeID__$}', implode(', ', $ids), $query);
 		if (count($ids) > 1) {
-			$query = str_replace('= (', 'IN (', $query);
+			$query = str_replace('= ({$__cakeID__$}', 'IN ({$__cakeID__$}', $query);
 		}
-
+		$query = str_replace('{$__cakeID__$}', implode(', ', $ids), $query);
 		return $this->fetchAll($query, $Model->cacheQueries);
 	}
 
@@ -1590,8 +1585,7 @@ class DboSource extends DataSource {
 			$assocFields = $this->fields($Model, null, "{$Model->alias}.{$Model->primaryKey}");
 			$passedFields = $queryData['fields'];
 
-			if (
-				count($passedFields) > 1 ||
+			if (count($passedFields) > 1 ||
 				(strpos($passedFields[0], $assocFields[0]) === false && !preg_match('/^[a-z]+\(/i', $passedFields[0]))
 			) {
 				$queryData['fields'] = array_merge($passedFields, $assocFields);
