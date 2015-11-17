@@ -13,44 +13,48 @@
 <?php endforeach;
     //クロンバックのα係数を記述
     echo "<BR>";
-	echo "クロンバックのα係数".$Data[2]."<BR><BR>";
-
+    echo "クロンバックのα係数：";
+    echo '<font color="red">'.$Data[2].'</font>'."<BR><BR>";
     echo "信頼性が高く、全体的に良いテストです。<BR>";
+    echo "平均点:".'<font color="red">74.5点</font>'."<BR>";
+    echo "最高点:".'<font color="red">98点</font>'."<BR>";
+    echo "最低点:".'<font color="red">41点</font>'."<BR>";
     echo "<BR>";
-    echo "各問題の項目特性図を表示します。<BR>詳しい説明についてはこちらをクリック";
+    echo $this->Html->image('/img/zu1.png',array('width'=>'300','height'=>'200'));
+    //echo "各問題の項目特性図を表示します。<BR>詳しい説明についてはこちらをクリック";
     //echo $html->image();
     //echo $this->link();
-    echo "<BR>問題1.<BR>";
-    echo $this->Html->image('/img/zu1.png');
-    echo "<BR>問題2.<BR>";
-    echo $this->Html->image('/img/zu2.png');
-    echo "<BR>問題3.<BR>";
-    echo $this->Html->image('/img/zu3.png');
-    echo "<BR>問題4.<BR>";
-    echo $this->Html->image('/img/zu4.png');
-    echo "<BR>問題5.<BR>";
-    echo $this->Html->image('/img/zu5.png');
-    foreach($Data[0] as $key => $value){
-        if(5 < $key && $key < 10){
-            echo "<BR>問題".$key.".<BR>";
-            echo $this->Html->image('/img/zu1.png');
-        }elseif(10 < $key && $key<20){
-            echo "<BR>問題".$key.".<BR>";
-            echo $this->Html->image('/img/zu2.png');
-        }elseif(20 < $key && $key<30){
-            echo "<BR>問題".$key.".<BR>";
-            echo $this->Html->image('/img/zu3.png');
-        }elseif(30 < $key&& $key<50){
-            echo "<BR>問題".$key.".<BR>";
-            echo $this->Html->image('/img/zu4.png');
-        }elseif(50 < $key&& $key< 65){
-            echo "<BR>問題".$key.".<BR>";
-            echo $this->Html->image('/img/zu5.png');
-        }else{
-            echo "<BR>問題".$key.".<BR>";
-            echo $this->Html->image('/img/zu1.png');
-        }
-    }
+    // echo "<BR>問題1.<BR>";
+    // //echo $this->Html->image('/img/zu1.png');
+    // echo "<BR>問題2.<BR>";
+    // //echo $this->Html->image('/img/zu2.png');
+    // echo "<BR>問題3.<BR>";
+    // echo $this->Html->image('/img/zu3.png');
+    // echo "<BR>問題4.<BR>";
+    // echo $this->Html->image('/img/zu4.png');
+    // echo "<BR>問題5.<BR>";
+    // echo $this->Html->image('/img/zu5.png');
+    // foreach($Data[0] as $key => $value){
+    //     if(5 < $key && $key < 10){
+    //         echo "<BR>問題".$key.".<BR>";
+    //         echo $this->Html->image('/img/zu1.png');
+    //     }elseif(10 < $key && $key<20){
+    //         echo "<BR>問題".$key.".<BR>";
+    //         echo $this->Html->image('/img/zu2.png');
+    //     }elseif(20 < $key && $key<30){
+    //         echo "<BR>問題".$key.".<BR>";
+    //         echo $this->Html->image('/img/zu3.png');
+    //     }elseif(30 < $key&& $key<50){
+    //         echo "<BR>問題".$key.".<BR>";
+    //         echo $this->Html->image('/img/zu4.png');
+    //     }elseif(50 < $key&& $key< 65){
+    //         echo "<BR>問題".$key.".<BR>";
+    //         echo $this->Html->image('/img/zu5.png');
+    //     }else{
+    //         echo "<BR>問題".$key.".<BR>";
+    //         echo $this->Html->image('/img/zu1.png');
+    //     }
+    // }
     ?>
 	<table border="1">
 		<?php
@@ -64,7 +68,7 @@
 ?>
 </table>
 </ul>
-<div style="text-align:center;font-size:30px;">
+<div id="font_button", style="text-align:center;">
 <?php
     echo $this->Form->postButton('作問アドバイス生成', array('controller' => 'Advices', 'action' => 'rule'));
     echo $this->Form->end();

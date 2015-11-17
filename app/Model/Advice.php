@@ -1,7 +1,6 @@
 <?php
 class Advice extends AppModel{
     public $useTable = 'advices';
-
     public function calculator($Data){
         $Advice = $this->find('all');
         foreach($Advice as $advice):
@@ -14,7 +13,7 @@ class Advice extends AppModel{
         $file = new File($data['tmp_name']);
         //$files = $file->read();
         $formArray = explode("\r", $file->read());
-        //ファイルの読み書きをここで行う
+            // ファイルの読み書きをここで行う
         //debug($files);
         //debug($formArray);
         foreach ($formArray as $firstkey => $firstvalue) {
@@ -275,12 +274,12 @@ class Advice extends AppModel{
             }
         }
         //echo "<BR>";
-        //var_dump($hozon1);
+        // var_dump($hozon1);
         //echo "<BR>";
         //var_dump($hozon2);
-        //echo "<BR>";
-        //var_dump($hozon3);
-        //echo "<BR>";
+        // echo "<BR>";
+        // var_dump($hozon3);
+        // echo "<BR>";
         //var_dump($hozon4);
         //echo "<BR>";
         //var_dump($hozon5);

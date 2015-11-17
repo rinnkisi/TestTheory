@@ -20,10 +20,15 @@
 	margin:0;
 	padding:0;
 }
-
+div#font_button.button{
+	font-size: 30px;
+}
+button{
+	font-size: 30px;
+}
 /** General Style Info **/
 body {
-	background: #003d4c;
+	background: #000;
 	color: #fff;
 	font-family:'lucida grande',verdana,helvetica,arial,sans-serif;
 	font-size:90%;
@@ -82,19 +87,19 @@ p {
 }
 #header h1 {
 	line-height:20px;
-	background: #003d4c url('../img/cake.icon.png') no-repeat left;
+	background: #000;
 	color: #fff;
 	padding: 0px 30px;
 }
 #header h1 a {
 	color: #fff;
-	background: #003d4c;
+	background: #000;
 	font-weight: normal;
 	text-decoration: none;
 }
 #header h1 a:hover {
 	color: #fff;
-	background: #003d4c;
+	background: #000;
 	text-decoration: underline;
 }
 #content{

@@ -24,10 +24,11 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 	<title>
 		<?php //echo $cakeDescription ?>
 		<?php //echo $this->fetch('title');
-				echo "テスト問題の分析支援システム";
+			echo "テスト問題の分析支援システム";
 		?>
 	</title>
 	<?php
+		//アイコンはここで変える
 		echo $this->Html->meta('icon');
 
 		echo $this->Html->css('cake.generic');
@@ -41,7 +42,8 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 	<div id="container">
 		<div id="header">
 			<h1><?php //ここにヘッダを記載する
-			//echo $this->Html->link($cakeDescription, 'http://cakephp.org'); ?></h1>
+			 echo $this->Html->link("テスト問題の分析支援システム",array('controller'=>'advices','action'=>'index'));
+			 ?></h1>
 		</div>
 		<div id="content">
 
