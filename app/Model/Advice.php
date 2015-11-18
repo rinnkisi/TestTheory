@@ -273,21 +273,6 @@ class Advice extends AppModel{
                 $hozon5[$j] = $zu5[$j]/$basic_number;
             }
         }
-        //echo "<BR>";
-        // var_dump($hozon1);
-        //echo "<BR>";
-        //var_dump($hozon2);
-        // echo "<BR>";
-        // var_dump($hozon3);
-        // echo "<BR>";
-        //var_dump($hozon4);
-        //echo "<BR>";
-        //var_dump($hozon5);
-        //echo $basic_number;
-        //echo "<BR>項目識別力";
-        //var_dump($discernment);//項目識別力
-        //echo "<BR>項目困難度";
-        //var_dump($difficulty);//項目困難度
         $file->close();
         return array($discernment,$difficulty,$cronbach);
     }
