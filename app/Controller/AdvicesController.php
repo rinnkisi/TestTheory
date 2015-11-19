@@ -4,6 +4,9 @@ class AdvicesController extends AppController{
     public function login(){
 
     }
+	public function csv_file(){
+
+	}
     public function index(){
 
     }
