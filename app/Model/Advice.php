@@ -1,31 +1,40 @@
 <?php
 class Advice extends AppModel{
     public $useTable = 'advices';
-    public function calculator($Data){
+    public function calculator($Data)
+    {
         $Advice = $this->find('all');
         foreach($Advice as $advice):
-        ($advice['Advice']['advice']); //アドバイスの参照を行っている部分 ?>
-        <?php endforeach; ?>
-        <?php foreach($Data as $data): ?>
-        <?php //debug($data);?>
-        <?php //echo ($data['tmp_name']); ?></br>
-        <?php endforeach;
+        ($advice['Advice']['advice']); //アドバイスの参照を行っている部分
+        endforeach;
+        foreach($Data as $data):
+        //debug($data);
+        //echo ($data['tmp_name']);
+        endforeach;
         $file = new File($data['tmp_name']);
         //$files = $file->read();
         $formArray = explode("\r", $file->read());
-            // ファイルの読み書きをここで行う
+        // ファイルの読み書きをここで行う
         //debug($files);
         //debug($formArray);
-        foreach ($formArray as $firstkey => $firstvalue) {
+        foreach ($formArray as $firstkey => $firstvalue)
+        {
             $Array[$firstkey] = explode(",", $formArray[$firstkey]);
             $score[$firstkey] = 0;
-            foreach ($Array[$firstkey] as $key => $value) {
-                if($key == 0){
-                }else{
+            foreach ($Array[$firstkey] as $key => $value)
+            {
+                if($key == 0)
+                {
+                }
+                else
+                {
                     $score[$firstkey] += $value;//素点を求める
-                    if(isset($koumoku[$key])){
+                    if(isset($koumoku[$key]))
+                    {
                         $koumoku[$key] += $value;
-                    }else{
+                    }
+                    else
+                    {
                         $koumoku[$key] = 0;
                         $koumoku[$key] += $value;
                     }
@@ -35,13 +44,15 @@ class Advice extends AppModel{
         }
         // ＄bangouでは配列番号、koumokuでは項目別の得点
         $scoresum = 0;
-        foreach ($score as $key => $valuescore) {
+        foreach ($score as $key => $valuescore)
+        {
             $scoresum += $valuescore;
         }
         $scoresum;//合計得点
         $heikin = $scoresum/($key+1);//echo "平均点".
         $scorehuhen = 0;//      echo "得点引く平均点<br>";
-        foreach ($score as $key => $valuescore) {
+        foreach ($score as $key => $valuescore)
+        {
             $scoreheikin[$key] = $valuescore - $heikin;
             $scorerui[$key] = $scoreheikin[$key]*$scoreheikin[$key];
             $scorehuhen += $scorerui[$key];
@@ -49,24 +60,33 @@ class Advice extends AppModel{
         $scorebunsan = $scorehuhen/$key; //echo "スコアの分散です。".;
         //得点の分散を表示
         //項目の得点合計や平均点のところ
-        foreach($koumoku as $bangou =>$sumitem){
+        foreach($koumoku as $bangou =>$sumitem)
+        {
             $sumitem;//echo "項目の合計得点".
             $difficulty[$bangou] = $sumitem/($key+1);//echo "平均点".
             //echo "得点引く平均点<br>";
         }
 //ここは項目の困難度とクロンバックで使う項目分散のところ
-        foreach ($formArray as $firstkey => $firstvalue) {
+        foreach ($formArray as $firstkey => $firstvalue)
+        {
             $Array[$firstkey] = explode(",", $formArray[$firstkey]);
             $score[$firstkey] = 0;
-            foreach ($Array[$firstkey] as $key => $value) {
-                if($key == 0){
-                }else{
+            foreach ($Array[$firstkey] as $key => $value)
+            {
+                if($key == 0)
+                {
+                }
+                else
+                {
                     $score[$firstkey] += $value;//素点を求める
-                    if(isset($kourui[$key])){//値がはいっているかの条件文
+                    if(isset($kourui[$key]))
+                    {//値がはいっているかの条件文
                         //項目ー平均点
                         $vtmp = $value - $difficulty[$key];
                         $kourui[$key] += ($vtmp*$vtmp);
-                    }else{
+                    }
+                    else
+                    {
                         $kourui[$key] = 0;
                         $vtmp = $value - $difficulty[$key];
                         $kourui[$key] += ($vtmp*$vtmp);
@@ -74,11 +94,15 @@ class Advice extends AppModel{
                 }
             }
         }
-        foreach($kourui as $koukey => $value1){
+        foreach($kourui as $koukey => $value1)
+        {
             $result = $value1/$firstkey;//分散をだしている
-            if(isset($result_sum)){//値がはいっているときの処理
+            if(isset($result_sum))
+            {//値がはいっているときの処理
                 $result_sum += $result;//各項目の分散の合計
-            }else{//$result_sumに値がはいっている。
+            }
+            else
+            {//$result_sumに値がはいっている。
                 $result_sum = 0;//値がはいってないためエラー回避のため
                 $result_sum += $result;//各項目の分散の合計
             }
@@ -92,13 +116,18 @@ class Advice extends AppModel{
         $basic = round(($firstkey+1)*0.27,0);//少数第１位以下を四捨五入
                 //echo "<BR><BR>zzz".$basic."zz".$firstkey;
         $basickey =(($firstkey+1)-$basic);//合計の-基準値を計算し後ろのどこまでを分析するか決めている
-        foreach($scoresort as $key =>$value){
-            if($key+1 <= $basic){
+        foreach($scoresort as $key =>$value)
+        {
+            if($key+1 <= $basic)
+            {
                 $sumkey= $key+1;
                 $sumvalue=$value;
-            }else if($key+1 >= $basickey){
+            }
+            else if($key+1 >= $basickey)
+            {
                 $totalkey= $key+1;
-                if($basickey == $key){
+                if($basickey == $key)
+                {
                     $totalvalue=$value;
                 }
             }
@@ -106,36 +135,55 @@ class Advice extends AppModel{
         $totalkey = $totalkey-$basic;
         $savecount=0;
         $hojicount=0;
-        foreach($score as $key =>$value){
-            if($value <= $sumvalue){
+        foreach($score as $key =>$value)
+        {
+            if($value <= $sumvalue)
+            {
                     $savekey[] = $key;
                     $savecount+=1;
-            }else if($value >= $totalvalue){
+            }
+            else if($value >= $totalvalue)
+            {
                     $hojikey[] = $key;
                     $hojicount+=1;
             }
         }
-        foreach ($formArray as $firstkey => $firstvalue) {
+        foreach ($formArray as $firstkey => $firstvalue)
+        {
             $Array[$firstkey] = explode(",", $formArray[$firstkey]);
-            foreach ($Array[$firstkey] as $key => $value) {
-                if($key == 0){
-                }else{
-                    foreach($savekey as $ley =>$x){
-                        if($firstkey == $x){
-                            if(isset($validity_save[$key])){
+            foreach ($Array[$firstkey] as $key => $value)
+            {
+                if($key == 0)
+                {
+                }
+                else
+                {
+                    foreach($savekey as $ley => $x)
+                    {
+                        if($firstkey == $x)
+                        {
+                            if(isset($validity_save[$key]))
+                            {
                                 $validity_save[$key] += $value;
-                            }else{
+                            }
+                            else
+                            {
                                 $validity_save[$key] = 0;
                                 $validity_save[$key] += $value;
                             }
                         }
                     }
                     //上位を求める
-                    foreach ($hojikey as $ley => $y) {
-                        if($firstkey == $y){
-                            if(isset($validity_hoji[$key])){
+                    foreach ($hojikey as $ley => $y)
+                    {
+                        if($firstkey == $y)
+                        {
+                            if(isset($validity_hoji[$key]))
+                            {
                                 $validity_hoji[$key] += $value;
-                            }else{
+                            }
+                            else
+                            {
                                 $validity_hoji[$key] = 0;
                                 $validity_hoji[$key] += $value;
                             }
@@ -146,19 +194,24 @@ class Advice extends AppModel{
         }
         //項目識別力を求める
         //上位の成績ひく下位の成績の人の正答率
-        foreach ($validity_hoji as $key => $value) {
+        foreach ($validity_hoji as $key => $value)
+        {
             $result_hoji = $value/$hojicount . "<BR>";//成績上位者の正答率hojicountの値が必ずしもbasicと同じではない
             $result_save = $validity_save[$key]/$savecount;//成績下位者の正答率
             $discernment[$key] = $result_hoji - $result_save;
         }
         //項目特性図を書くために必要なこと
-        foreach($score as $key =>$value){
+        foreach($score as $key =>$value)
+        {
             $count[$key]=$key;
         }
-        for($j=0;$j<$firstkey+1;$j++){
+        for($j=0;$j<$firstkey+1;$j++)
+        {
             $score[$j];
-            for($i=$j;$i<$firstkey+1;$i++){//ループで最小値を値をさがす
-                if($score[$i] < $score[$j]){
+            for($i=$j;$i<$firstkey+1;$i++)
+            {//ループで最小値を値をさがす
+                if($score[$i] < $score[$j])
+                {
                     $tmp=$score[$j];
                     $t=$count[$j];
                     $score[$j]=$score[$i];
@@ -191,41 +244,65 @@ class Advice extends AppModel{
         $basic_number=ceil($firstkey/5);
 
         //５群にわけた正答率をだす部分↓
-        foreach($count as $key=>$value){
-            foreach ($Array[$value] as $secondkey => $secondvalue) {
-                if(0!=$secondkey){
-                    if($key < $basic_number){
-                        if(isset($zu1[$secondkey])){
+        foreach($count as $key=>$value)
+        {
+            foreach ($Array[$value] as $secondkey => $secondvalue)
+            {
+                if(0!=$secondkey)
+                {
+                    if($key < $basic_number)
+                    {
+                        if(isset($zu1[$secondkey]))
+                        {
                             $zu1[$secondkey]+=$secondvalue;
-                        }else{
+                        }
+                        else
+                        {
                             $zu1[$secondkey] = 0;
                             $zu1[$secondkey]+=$secondvalue;
                         }
-                    }elseif($key < $basic_number*2){
-                        if(isset($zu2[$secondkey])){
+                    }elseif($key < $basic_number*2)
+                    {
+                        if(isset($zu2[$secondkey]))
+                        {
                             $zu2[$secondkey]+=$secondvalue;
-                        }else{
+                        }
+                        else
+                        {
                             $zu2[$secondkey] = 0;
                             $zu2[$secondkey]+=$secondvalue;
                         }
-                    }elseif($key < $basic_number*3){
-                        if(isset($zu3[$secondkey])){
+                    }elseif($key < $basic_number*3)
+                    {
+                        if(isset($zu3[$secondkey]))
+                        {
                             $zu3[$secondkey]+=$secondvalue;
-                        }else{
+                        }
+                        else{
                             $zu3[$secondkey] = 0;
                             $zu3[$secondkey]+=$secondvalue;
                         }
-                    }elseif($key < $basic_number*4){
-                        if(isset($zu4[$secondkey])){
+                    }
+                    elseif($key < $basic_number*4)
+                    {
+                        if(isset($zu4[$secondkey]))
+                        {
                             $zu4[$secondkey]+=$secondvalue;
-                        }else{
+                        }
+                        else
+                        {
                             $zu4[$secondkey] = 0;
                             $zu4[$secondkey]+=$secondvalue;
                         }
-                    }else{
-                        if(isset($zu5[$secondkey])){
+                    }
+                    else
+                    {
+                        if(isset($zu5[$secondkey]))
+                        {
                             $zu5[$secondkey]+=$secondvalue;
-                        }else{
+                        }
+                        else
+                        {
                             $zu5[$secondkey] = 0;
                             $zu5[$secondkey]+=$secondvalue;
                         }
