@@ -310,47 +310,72 @@ class Advice extends AppModel{
                 }
             }
         }
-        for($j=1;$j < $secondkey+1;$j++){
-            if(isset($hozon1[$j])){
+        for($j=1;$j < $secondkey+1;$j++)
+        {
+            if(isset($hozon1[$j]))
+            {
                 $hozon1[$j] = $zu1[$j]/$basic_number;
-            }else{
+            }
+            else
+            {
                 $hozon1[$j] = 0;
                 $hozon1[$j] = $zu1[$j]/$basic_number;
             }
         }
-        for($j=1;$j < $secondkey+1;$j++){
-            if(isset($hozon2[$j])){
+        for($j=1;$j < $secondkey+1;$j++)
+        {
+            if(isset($hozon2[$j]))
+            {
                 $hozon2[$j] = $zu2[$j]/$basic_number;
-            }else{
+            }
+            else
+            {
                 $hozon2[$j] = 0;
                 $hozon2[$j] = $zu2[$j]/$basic_number;
             }
         }
-        for($j=1;$j < $secondkey+1;$j++){
-            if(isset($hozon3[$j])){
+        for($j=1;$j < $secondkey+1;$j++)
+        {
+            if(isset($hozon3[$j]))
+            {
                 $hozon3[$j] = $zu3[$j]/$basic_number;
-            }else{
+            }
+            else
+            {
                 $hozon3[$j] = 0;
                 $hozon3[$j] = $zu3[$j]/$basic_number;
             }
         }
-        for($j=1;$j < $secondkey+1;$j++){
-            if(isset($hozon4[$j])){
+        for($j=1;$j < $secondkey+1;$j++)
+        {
+            if(isset($hozon4[$j]))
+            {
                 $hozon4[$j] = $zu4[$j]/$basic_number;
-            }else{
+            }
+            else
+            {
                 $hozon4[$j] = 0;
                 $hozon4[$j] = $zu4[$j]/$basic_number;
             }
         }
-        for($j=1;$j < $secondkey+1;$j++){
-            if(isset($hozon5[$j])){
+        for($j=1;$j < $secondkey+1;$j++)
+        {
+            if(isset($hozon5[$j]))
+            {
                 $hozon5[$j] = $zu5[$j]/$basic_number;
-            }else{
+            }
+            else
+            {
                 $hozon5[$j] = 0;
                 $hozon5[$j] = $zu5[$j]/$basic_number;
             }
         }
         $file->close();
         return array($discernment,$difficulty,$cronbach);
+    }
+    public function test()
+    {
+        $this->find('all');
+        
     }
 }

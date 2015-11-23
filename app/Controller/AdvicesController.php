@@ -16,7 +16,7 @@ class AdvicesController extends AppController{
     public function advice()
 	{
 	    // ポストデータがあれば保存をする（保存ボタンが押された場合）
-	    $this->Advice->set( $this->request->data );
+	    $this->Advice->set($this->request->data);
 	    //debug($this->request->data)
         //$this->set('Advices',$this->Advice->find('all'));
         if ($this->request->is('post'))
