@@ -376,6 +376,19 @@ class Advice extends AppModel{
     public function test()
     {
         $this->find('all');
-        
+    }
+    public function file_check($file_data = null)
+    {
+        $csv_file = explode(".", $file_data);
+        $file_count = count($csv_file);
+        if($csv_file[$file_count - 1] == "csv")
+        {
+            $result = 1;
+        }
+        else
+        {
+            $result = 0;
+        }
+        return $result;
     }
 }

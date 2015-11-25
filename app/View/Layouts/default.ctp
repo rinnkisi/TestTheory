@@ -42,7 +42,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 	<div id="container">
 		<div id="header">
 			<h1><?php //ここにヘッダを記載する
-			 echo $this->Html->link("テスト問題の分析支援システム", array('action' => 'index'));
+			 echo $this->Html->link("テスト問題の分析支援システム", array('controller' => 'Advices', 'action' => 'index'));
 			 ?></h1>
 		</div>
 		<div id="content">

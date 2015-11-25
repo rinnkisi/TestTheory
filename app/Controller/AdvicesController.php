@@ -27,9 +27,12 @@ class AdvicesController extends AppController{
 		}
 		//csvやエクセルファイル意外であればエラーが帰ってくる
 		//sizeのチェックも行う
-		if()
+		//debug($this->request->data['csv']);
+		//ファイルをチェックする。
+		if($this->Advice->file_check($this->request->data['csv']['name']) == 0)
 		{
-
+			$this->Session->write('error_log', 'CSVファイルを選択してください');
+			$this->redirect('index');
 		}
 	    // ポストデータがあれば保存をする（保存ボタンが押された場合）
 	    $this->Advice->set($this->request->data);
