@@ -11,14 +11,34 @@ class AdvicesController extends AppController{
 	}
     public function index()
 	{
-
+		if($this->Session->read('error_log'))
+		{
+			$this->set('error_log', $this->Session->read('error_log'));
+		}
+		$this->Session->delete('error_log');
     }
     public function advice()
 	{
+		//空の場合にはエラーとしてint(4)が帰ってくる
+		if($this->request->data['csv']['error'] == 4)
+		{
+			$this->Session->write('error_log', 'CSVファイルを選択してください');
+			$this->redirect('index');
+		}
+		//csvやエクセルファイル意外であればエラーが帰ってくる
+		//sizeのチェックも行う
+		//debug($this->request->data['csv']);
+		//ファイルをチェックする。
+		if($this->Advice->file_check($this->request->data['csv']['name']) == 0)
+		{
+			$this->Session->write('error_log', 'CSVファイルを選択してください');
+			$this->redirect('index');
+		}
 	    // ポストデータがあれば保存をする（保存ボタンが押された場合）
-	    $this->Advice->set( $this->request->data );
+	    $this->Advice->set($this->request->data);
 	    //debug($this->request->data)
         //$this->set('Advices',$this->Advice->find('all'));
+		//postがtrueの時
         if ($this->request->is('post'))
 		{
         	//echo debug($this->request->data);
