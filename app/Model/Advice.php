@@ -1,75 +1,46 @@
 <?php
+App::uses('File', 'Utility');
 class Advice extends AppModel{
     public $useTable = 'advices';
-    public function calculator($Data)
+    //Data にはcsvファイルの情報が入っている
+    public function calculator($Data = null)
     {
+        //ここで使うのはAdvicesテーブル
         $Advice = $this->find('all');
-        foreach($Advice as $advice):
-        ($advice['Advice']['advice']); //アドバイスの参照を行っている部分
+        /* アドバイスの参照を行っている部分
+        foreach($Advice as $advice_value):
         endforeach;
-        foreach($Data as $data):
-        //debug($data);
-        //echo ($data['tmp_name']);
+        */
+        //cakephpの File ユーティリティ(ファイルの読み書きやフォルダ内のファイル名一覧の取得)
+        $file = new File($Data['csv']['tmp_name']);
+        // explode で改行がある時の列を配列として代入
+        $array_file = explode("\r", $file->read());
+        //1行毎に配列にしてくる
+        foreach ($array_file as $key => $value):
+            //行ごとに配列にする
+            $array_line[$key] = explode(",", $array_file[$key]);
+            // 1人毎の素点が帰ってくる
+            $score[$key] = self::student_score($array_line, $key);
         endforeach;
-        $file = new File($data['tmp_name']);
-        //$files = $file->read();
-        $formArray = explode("\r", $file->read());
-        // ファイルの読み書きをここで行う
-        //debug($files);
-        //debug($formArray);
-        foreach ($formArray as $firstkey => $firstvalue)
-        {
-            $Array[$firstkey] = explode(",", $formArray[$firstkey]);
-            $score[$firstkey] = 0;
-            foreach ($Array[$firstkey] as $key => $value)
-            {
-                if($key == 0)
-                {
-                }
-                else
-                {
-                    $score[$firstkey] += $value;//素点を求める
-                    if(isset($koumoku[$key]))
-                    {
-                        $koumoku[$key] += $value;
-                    }
-                    else
-                    {
-                        $koumoku[$key] = 0;
-                        $koumoku[$key] += $value;
-                    }
-                }
-            }
-            //echo "素点".$score[$firstkey]."<BR>";//素点,firstkeyは得点の配列番号
-        }
-        // ＄bangouでは配列番号、koumokuでは項目別の得点
-        $scoresum = 0;
-        foreach ($score as $key => $valuescore)
-        {
-            $scoresum += $valuescore;
-        }
-        $scoresum;//合計得点
-        $heikin = $scoresum/($key+1);//echo "平均点".
-        $scorehuhen = 0;//      echo "得点引く平均点<br>";
-        foreach ($score as $key => $valuescore)
-        {
-            $scoreheikin[$key] = $valuescore - $heikin;
-            $scorerui[$key] = $scoreheikin[$key]*$scoreheikin[$key];
-            $scorehuhen += $scorerui[$key];
-        }
-        $scorebunsan = $scorehuhen/$key; //echo "スコアの分散です。".;
-        //得点の分散を表示
+
+        //人数や、平均点、最高点、など
+        $people = $key + 1;
+        $average = self::score_average($score, $people);
+        $dispersion = self::score_dispersion($score, $average);
+        $top_score = max($score);
+        $low_score = min($score);
+        // 問題数をとってくる関数
+        $item_sum = self::item_sum($array_line);
+        debug($item_sum);
+        $item_difficulty = self::item_average($item_sum, $people);
+        debug($item_difficulty);
+
         //項目の得点合計や平均点のところ
-        foreach($koumoku as $bangou =>$sumitem)
-        {
-            $sumitem;//echo "項目の合計得点".
-            $difficulty[$bangou] = $sumitem/($key+1);//echo "平均点".
-            //echo "得点引く平均点<br>";
-        }
+/*
 //ここは項目の困難度とクロンバックで使う項目分散のところ
-        foreach ($formArray as $firstkey => $firstvalue)
+        foreach ($array_file as $firstkey => $firstvalue)
         {
-            $Array[$firstkey] = explode(",", $formArray[$firstkey]);
+            $Array[$firstkey] = explode(",", $array_file[$firstkey]);
             $score[$firstkey] = 0;
             foreach ($Array[$firstkey] as $key => $value)
             {
@@ -107,6 +78,7 @@ class Advice extends AppModel{
                 $result_sum += $result;//各項目の分散の合計
             }
         }
+
         //各項目の分散と素点の分散をだしている
         //クロンバックα係数をだしている
         $cronbach=($koukey/($koukey-1)*(1-($result_sum/$scorebunsan)));
@@ -148,9 +120,9 @@ class Advice extends AppModel{
                     $hojicount+=1;
             }
         }
-        foreach ($formArray as $firstkey => $firstvalue)
+        foreach ($array_file as $firstkey => $firstvalue)
         {
-            $Array[$firstkey] = explode(",", $formArray[$firstkey]);
+            $Array[$firstkey] = explode(",", $array_file[$firstkey]);
             foreach ($Array[$firstkey] as $key => $value)
             {
                 if($key == 0)
@@ -223,25 +195,7 @@ class Advice extends AppModel{
             }
         }
      //5グループに分ける処理
-     /*
-    foreach($count as $key=>$value){
-        if($key < $firstkey/5){
-            $first[$key] = $value;
-        }elseif($key < $firstkey*2/5){
-            $second[$key] = $value;
-        }elseif($key < $firstkey*3/5){
-            $third[$key] = $value;
-        }elseif($key < $firstkey*4/5){
-            $fouth[$key] = $value;
-        }else{
-            $last[$key] = $value;
-        }
-     }
-     */
-        //debug($count);
-        //debug($scoresort);
-        //debug($Array);
-        $basic_number=ceil($firstkey/5);
+        $basic_number = ceil($firstkey/5);
 
         //５群にわけた正答率をだす部分↓
         foreach($count as $key=>$value)
@@ -322,7 +276,7 @@ class Advice extends AppModel{
                 $hozon1[$j] = $zu1[$j]/$basic_number;
             }
         }
-        for($j=1;$j < $secondkey+1;$j++)
+        for($j=1;$j < $secondkey+1;$j++)aaaaaaaaaaa
         {
             if(isset($hozon2[$j]))
             {
@@ -370,25 +324,86 @@ class Advice extends AppModel{
                 $hozon5[$j] = $zu5[$j]/$basic_number;
             }
         }
+*/
         $file->close();
-        return array($discernment,$difficulty,$cronbach);
+        //return array($discernment, $difficulty, $cronbach);
     }
-    public function test()
+    // 素点返す関数
+    public function student_score($array_line = array(), $key)
     {
-        $this->find('all');
+        //素点を記録用配列
+        $score[$key] = 0;
+        //配列の中身をさらに問題毎に取り出す
+        foreach ($array_line[$key] as $problem_number => $problem_bool):
+            //問題番号が0以外の場合のみ値を足す
+            if($problem_number != 0)
+            {
+                //素点を求める
+                $score[$key] += $problem_bool;
+            }
+        endforeach;
+        return $score[$key];
     }
-    public function file_check($file_data = null)
+    // 平均点を返す
+    public function score_average($score = array(), $basic)
     {
-        $csv_file = explode(".", $file_data);
+        $sum = 0;
+        foreach ($score as $key => $value)
+        {
+            $sum += $value;
+        }
+        return $sum / $basic;
+    }
+    // 不偏分散を返す(分散は$keyをプラス1)
+    public function score_dispersion($score = array(), $average = null)
+    {
+        $sum = 0;
+        foreach ($score as $key => $value)
+        {
+            $tmp[$key] = (($value - $average) * ($value - $average));
+            $sum += $tmp[$key];
+        }
+        return $sum / $key;
+    }
+    public function item_average($item = array(), $basic = null)
+    {
+        foreach ($item as $key => $value):
+            $item_average[$key] = $value / $basic;
+        endforeach;
+        return $item_average;
+    }
+    public function item_sum($array_line)
+    {
+        foreach ($array_line as $array_key => $array_value):
+            foreach($array_value as $key => $value):
+                if(!empty($item_sum[$key]))
+                {
+                    $item_sum[$key] += $value;
+                    continue;
+                }
+                //値がなかった場合には最初人の解答データを与える
+                $item_sum[$key] = $value;
+            endforeach;
+        endforeach;
+        unset($item_sum[0]);
+        $item_sum = array_values($item_sum);
+        return $item_sum;
+    }
+    // CSVファイルの場合は0を返す
+    public function file_check($file_name = null)
+    {
+        //ファイル名をチェックしている
+        $csv_file = explode(".", $file_name);
+        //countで配列の数を返す
         $file_count = count($csv_file);
+        //配列の数を１つ減らしたものが.◯◯以下である
         if($csv_file[$file_count - 1] == "csv")
         {
-            $result = 1;
+            return 0;
         }
         else
         {
-            $result = 0;
+            return 1;
         }
-        return $result;
     }
 }
