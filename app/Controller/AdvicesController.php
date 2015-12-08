@@ -19,17 +19,21 @@ class AdvicesController extends AppController{
     }
     public function advice()
 	{
+		//csv形式のファイルがない場合にはindexに飛ばす
+		if(empty($this->request->data['csv']))
+		{
+			$this->redirect('index');
+		}
 		//空の場合にはエラーとしてint(4)が帰ってくる
 		if($this->request->data['csv']['error'] == 4)
 		{
 			$this->Session->write('error_log', 'CSVファイルを選択してください');
 			$this->redirect('index');
 		}
-		//csvやエクセルファイル意外であればエラーが帰ってくる
-		//sizeのチェックも行う
+		//csvやエクセルファイル意外であればエラーが帰ってくる。sizeのチェックも行う
 		//debug($this->request->data['csv']);
 		//ファイルをチェックする。
-		if($this->Advice->file_check($this->request->data['csv']['name']) == 0)
+		if($this->Advice->file_check($this->request->data['csv']['name']) == 1)
 		{
 			$this->Session->write('error_log', 'CSVファイルを選択してください');
 			$this->redirect('index');
@@ -44,13 +48,13 @@ class AdvicesController extends AppController{
         	//echo debug($this->request->data);
             //$this->set('Data',$this->request->data);
             //Dataをmodelに送っている
-            $Data =$this->request->data;
+            $data = $this->request->data;
             //modelを呼びだしreturnの値を返している
-            $atai=$this->Advice->calculator($Data);
+            $result = $this->Advice->calculator($data);
             //ビューに値をおくっている。↓
-            $this->set("Data",$atai);
+            $this->set("Data", $result);
             //アドバイスDBから情報をもってきている
-            $advices=$this->Advice->find('all');
+            $advices = $this->Advice->find('all');
             //アドバイスDBをセットする
             $this->set('Advice',$advices);
             if($this->Advice->save($this->request->data))
