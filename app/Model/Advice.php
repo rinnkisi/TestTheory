@@ -20,24 +20,35 @@ class Advice extends AppModel{
             //行ごとに配列にする
             $array_line[$key] = explode(",", $array_file[$key]);
             // 1人毎の素点が帰ってくる
-            $score[$key] = self::student_score($array_line, $key);
+            $score[$key] = $this->student_score($array_line, $key);
         endforeach;
 
         //人数や、平均点、最高点、など
         $people = $key + 1;
-        $average = self::score_average($score, $people);
-        $dispersion = self::score_dispersion($score, $average);
+        $average = $this->score_average($score, $people);
+        //普遍分散を返す
+        $score_dispersion = $this->score_dispersion($score, $average);
         $top_score = max($score);
         $low_score = min($score);
         // 問題数をとってくる関数
-        $item_sum = self::item_sum($array_line);
+        $item_sum = $this->item_sum($array_line);
         debug($item_sum);
-        $item_difficulty = self::item_average($item_sum, $people);
+        //項目困難度の算出
+        $item_difficulty = $this->item_difficulty($item_sum, $people);
         debug($item_difficulty);
 
         //項目の得点合計や平均点のところ
-/*
-//ここは項目の困難度とクロンバックで使う項目分散のところ
+        //ここは項目の困難度とクロンバックで使う項目分散のところ
+        //各項目の分散値を表す式
+        // 1問2点の問題があったとすると
+        // 100人中98人正解したとすると
+        // 196点となる。また、2人が不正解で不正解者は0点となっている
+        // ここでの平均点は合計点の200 / 100は2つまり配点を定める必要がでてくる。1.98点となる
+        // ただし、1点を基準としてやる問題であれば 1 で問題はない。
+        $item_sum_dispersion = $this->item_sum_dispersion($people, $item_sum, 1);
+        debug($item_sum_dispersion);
+        
+        /*
         foreach ($array_file as $firstkey => $firstvalue)
         {
             $Array[$firstkey] = explode(",", $array_file[$firstkey]);
@@ -50,8 +61,9 @@ class Advice extends AppModel{
                 else
                 {
                     $score[$firstkey] += $value;//素点を求める
+                    //値がはいっているかの条件文
                     if(isset($kourui[$key]))
-                    {//値がはいっているかの条件文
+                    {
                         //項目ー平均点
                         $vtmp = $value - $difficulty[$key];
                         $kourui[$key] += ($vtmp*$vtmp);
@@ -82,6 +94,8 @@ class Advice extends AppModel{
         //各項目の分散と素点の分散をだしている
         //クロンバックα係数をだしている
         $cronbach=($koukey/($koukey-1)*(1-($result_sum/$scorebunsan)));
+
+
         $scoresort=$score;
         sort($scoresort);//ここでソートをする
         //debug($scoresort);
@@ -334,12 +348,12 @@ class Advice extends AppModel{
         //素点を記録用配列
         $score[$key] = 0;
         //配列の中身をさらに問題毎に取り出す
-        foreach ($array_line[$key] as $problem_number => $problem_bool):
+        foreach ($array_line[$key] as $problem_number => $problem_point):
             //問題番号が0以外の場合のみ値を足す
             if($problem_number != 0)
             {
                 //素点を求める
-                $score[$key] += $problem_bool;
+                $score[$key] += $problem_point;
             }
         endforeach;
         return $score[$key];
@@ -354,7 +368,7 @@ class Advice extends AppModel{
         }
         return $sum / $basic;
     }
-    // 不偏分散を返す(分散は$keyをプラス1)
+    // 不偏分散を返す(分散の場合はkeyをプラスしない)
     public function score_dispersion($score = array(), $average = null)
     {
         $sum = 0;
@@ -363,14 +377,15 @@ class Advice extends AppModel{
             $tmp[$key] = (($value - $average) * ($value - $average));
             $sum += $tmp[$key];
         }
-        return $sum / $key;
+        echo $key;
+        return $sum / ($key + 1);
     }
-    public function item_average($item = array(), $basic = null)
+    public function item_difficulty($item = array(), $basic = null)
     {
         foreach ($item as $key => $value):
-            $item_average[$key] = $value / $basic;
+            $item_difficulty[$key] = $value / $basic;
         endforeach;
-        return $item_average;
+        return $item_difficulty;
     }
     public function item_sum($array_line)
     {
@@ -388,6 +403,16 @@ class Advice extends AppModel{
         unset($item_sum[0]);
         $item_sum = array_values($item_sum);
         return $item_sum;
+    }
+    // 項目毎の分散値を求めてその合計値を返す関数 項目合計分散値
+    public function item_sum_dispersion($people = null, $right_user = array(), $basic_point)
+    {
+        foreach($right_user as $key => $right_value):
+            $right_average = pow(($basic_point - ($right_value / $people)), 2) * $right_value;
+            $incorrect_average = pow(- ($right_value / $people), 2) * ($people - $right_value);
+            $item_dispersion[$key] = ($right_average + $incorrect_average) / $people;
+        endforeach;
+        return array_sum($item_dispersion);
     }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
