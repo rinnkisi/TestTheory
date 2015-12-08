@@ -25,6 +25,7 @@ class Advice extends AppModel{
 
         //人数や、平均点、最高点、など
         $people = count($array_file);
+        debug($array_file);
         $average = $this->score_average($score, $people);
         //普遍分散を返す
         $score_dispersion = $this->score_dispersion($score, $average);
@@ -32,20 +33,25 @@ class Advice extends AppModel{
         $low_score = min($score);
         // 問題数をとってくる関数
         $item_sum = $this->item_sum($array_line);
+        debug($item_sum);
         //項目困難度の算出
         $item_difficulty = $this->item_difficulty($item_sum, $people);
 
-        //項目の得点合計や平均点のところ
-        //ここは項目の困難度とクロンバックで使う項目分散のところ
-        //各項目の分散値を表す式
-        // 1問2点の問題があったとすると
-        // 100人中98人正解したとすると
-        // 196点となる。また、2人が不正解で不正解者は0点となっている
-        // ここでの平均点は合計点の200 / 100は2つまり配点を定める必要がでてくる。1.98点となる
-        // ただし、1点を基準としてやる問題であれば 1 で問題はない。
+        /* 項目の得点合計や平均点のところ
+        ここは項目の困難度とクロンバックで使う項目分散のところ
+        各項目の分散値を表す式
+        1問2点の問題があったとすると
+        100人中98人正解したとすると
+        196点となる。また、2人が不正解で不正解者は0点となっている
+        ここでの平均点は合計点の200 / 100は2つまり配点を定める必要がでてくる。1.98点となる
+        ただし、1点を基準としてやる問題であれば 1 で問題はない。
+        */
         $item_dispersion = $this->item_dispersion($people, $item_sum, 1);
         $cronbach = $this->cronbach(count($item_sum), $item_dispersion, $score_dispersion);
-        
+        $student_top = $this->student_top($score, $people);
+        //$student_under = $this->student_under($score);
+        debug($student_top);
+        $student_top_ =
         $file->close();
         //return array($discernment, $difficulty, $cronbach);
     }
@@ -93,6 +99,7 @@ class Advice extends AppModel{
         endforeach;
         return $item_difficulty;
     }
+    //array_valuesで配列の添え字を0にして代入している
     public function item_sum($array_line)
     {
         foreach ($array_line as $array_key => $array_value):
@@ -111,6 +118,7 @@ class Advice extends AppModel{
         return $item_sum;
     }
     // 項目毎の分散値を求めてその合計値を返す関数 項目合計分散値
+    // powは2乗の計算を行う
     public function item_dispersion($people = null, $right_user = array(), $basic_number)
     {
         foreach($right_user as $key => $right_value):
@@ -126,6 +134,27 @@ class Advice extends AppModel{
         $cronbach = ($item / ($item - 1)) * (1 - ($item_dispersion / $score_dispersion));
         return $cronbach;
     }
+    public function student_top($score = array(), $people = null)
+    {
+        arsort($score);
+        debug($score);
+        $basic_value = ceil($people * 0.27);
+        echo $basic_value;
+        // iはループカウンタ
+        $i = 0;
+        foreach($item_sum as $key => $value):
+            if($i == $basic_value){
+                break;
+            }
+            $hairetu[$i] = $key;
+            $i++;
+        endforeach;
+        return $hairetu;
+    }
+    public function student_under()
+    {
+
+    }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
     {
@@ -138,9 +167,6 @@ class Advice extends AppModel{
         {
             return 0;
         }
-        else
-        {
             return 1;
-        }
     }
 }
