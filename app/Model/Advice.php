@@ -22,10 +22,8 @@ class Advice extends AppModel{
             // 1人毎の素点が帰ってくる
             $score[$key] = $this->student_score($array_line, $key);
         endforeach;
-
         //人数や、平均点、最高点、など
         $people = count($array_file);
-        debug($array_file);
         $average = $this->score_average($score, $people);
         //普遍分散を返す
         $score_dispersion = $this->score_dispersion($score, $average);
@@ -33,34 +31,31 @@ class Advice extends AppModel{
         $low_score = min($score);
         // 問題数をとってくる関数
         $item_sum = $this->item_sum($array_line);
-        debug($item_sum);
         //項目困難度の算出
         $item_difficulty = $this->item_difficulty($item_sum, $people);
-
         /* 項目の得点合計や平均点のところ
         ここは項目の困難度とクロンバックで使う項目分散のところ
-        各項目の分散値を表す式
-        1問2点の問題があったとすると
-        100人中98人正解したとすると
-        196点となる。また、2人が不正解で不正解者は0点となっている
+        各項目の分散値を表す式。1問2点の問題があったとすると
+        100人中98人正解したとすると196点となる。また、2人が不正解で不正解者は0点となっている
         ここでの平均点は合計点の200 / 100は2つまり配点を定める必要がでてくる。1.98点となる
         ただし、1点を基準としてやる問題であれば 1 で問題はない。
         */
         $item_dispersion = $this->item_dispersion($people, $item_sum, 1);
         $cronbach = $this->cronbach(count($item_sum), $item_dispersion, $score_dispersion);
-        $student_top = $this->student_top($score, $people);
-        //$student_under = $this->student_under($score);
-        debug($student_top);
-        $student_top_ =
+        $student_top = $this->student_divide($score, $people, 0);
+        $student_under = $this->student_divide($score, $people, 1);
+        $top_difficulty = $this->accuracy_rate($array_file, $student_top);
+        $under_difficulty = $this->accuracy_rate($array_file, $student_under);
+        $item_identification = $this->item_identification($top_difficulty, $under_difficulty);
         $file->close();
-        //return array($discernment, $difficulty, $cronbach);
+        return array($item_identification, $item_difficulty, $cronbach);
     }
     // 素点返す関数
     public function student_score($array_line = array(), $key)
     {
         //素点を記録用配列
         $score[$key] = 0;
-        //配列の中身をさらに問題毎に取り出す
+        //配列の中身を取り出す
         foreach ($array_line[$key] as $problem_number => $problem_point):
             //問題番号が0以外の場合のみ値を足す
             if($problem_number != 0)
@@ -134,26 +129,48 @@ class Advice extends AppModel{
         $cronbach = ($item / ($item - 1)) * (1 - ($item_dispersion / $score_dispersion));
         return $cronbach;
     }
-    public function student_top($score = array(), $people = null)
+    // iはループカウンタ
+    public function student_divide($score = array(), $people = null, $bool = 0)
     {
-        arsort($score);
-        debug($score);
+        if($bool == 1)
+            asort($score);
+        else
+            arsort($score);
         $basic_value = ceil($people * 0.27);
-        echo $basic_value;
-        // iはループカウンタ
         $i = 0;
-        foreach($item_sum as $key => $value):
+        foreach($score as $key => $value):
             if($i == $basic_value){
                 break;
             }
-            $hairetu[$i] = $key;
+            $student_divide[$i] = $key;
             $i++;
         endforeach;
-        return $hairetu;
+        sort($student_divide);
+        return $student_divide;
     }
-    public function student_under()
+    // 群に分けたやつの項目毎の識別力を返す
+    public function accuracy_rate($array_file = array(), $basic = array())
     {
-
+        $i = 0;
+        foreach($array_file as $key => $value):
+            if(isset($basic[$i]) && $key == $basic[$i])
+            {
+                $array_line[$i] = explode(",", $value);
+                $tmp_line[$i] = $array_line[$i];
+                $i++;
+            }
+        endforeach;
+        $item_sum = $this->item_sum($tmp_line);
+        $item_difficulty = $this->item_difficulty($item_sum, $i);
+        return $item_difficulty;
+    }
+    public function item_identification($top_difficulty, $under_difficulty)
+    {
+        for($i = 0;$i < count($top_difficulty); $i++)
+        {
+            $item_identification[$i] = $top_difficulty[$i] - $under_difficulty[$i];
+        }
+        return $item_identification;
     }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)

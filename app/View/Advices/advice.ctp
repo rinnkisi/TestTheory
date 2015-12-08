@@ -6,11 +6,10 @@
     //echo debug($Advice);
     foreach($Advice as $advice):
     //echo debug($advice['Advice']['advice']); //アドバイスの参照を行っている部分
-?>
-<?php endforeach;
+    endforeach;
     //この下の処理でdata[]に項目困難度を入力している。
-    foreach($Data[1] as $data[]): ?>
-<?php endforeach;
+    foreach($Data[1] as $data[]):
+    endforeach;
     //クロンバックのα係数を記述
     echo "<BR>";
     echo "クロンバックのα係数：";
@@ -60,9 +59,10 @@
 		<?php
     foreach($Data[0] as $key => $value){
 	echo '<tr>';
-//  	echo '<td>'. "素点".$score[$key+1].'</td>';
-    echo '<td>'.$key1=$key ."問目：項目識別度".$value.'</td>';
-    echo '<td>'.$key2=$key ."問目：項目困難度".$data[$key-1].'</td>';
+    // echo '<td>'. "素点".$score[$key+1].'</td>';
+    $number = $key + 1;
+    echo '<td>'. $number ."問目：項目識別度".$value.'</td>';
+    echo '<td>'. $number ."問目：項目困難度".$data[$key].'</td>';
 	echo '</tr>';
 	}
 ?>
