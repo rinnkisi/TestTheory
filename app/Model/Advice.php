@@ -23,16 +23,17 @@ class Advice extends AppModel{
             $score[$key] = $this->student_score($array_line, $key);
         endforeach;
         //人数や、平均点、最高点、など
-        $people = count($array_file);
-        $average = $this->score_average($score, $people);
+        $data['people'] = count($array_file);
+        $data['average'] = $this->score_average($score, $data['people']);
         //普遍分散を返す
-        $score_dispersion = $this->score_dispersion($score, $average);
-        $top_score = max($score);
-        $low_score = min($score);
+        $data['score_dispersion'] = $this->score_dispersion($score, $data['average']);
+
+        $data['top_score'] = max($score);
+        $data['low_score'] = min($score);
         // 問題数をとってくる関数
         $item_sum = $this->item_sum($array_line);
         //項目困難度の算出
-        $item_difficulty = $this->item_difficulty($item_sum, $people);
+        $item_difficulty = $this->item_difficulty($item_sum, $data['people']);
         /* 項目の得点合計や平均点のところ
         ここは項目の困難度とクロンバックで使う項目分散のところ
         各項目の分散値を表す式。1問2点の問題があったとすると
@@ -40,15 +41,23 @@ class Advice extends AppModel{
         ここでの平均点は合計点の200 / 100は2つまり配点を定める必要がでてくる。1.98点となる
         ただし、1点を基準としてやる問題であれば 1 で問題はない。
         */
-        $item_dispersion = $this->item_dispersion($people, $item_sum, 1);
-        $cronbach = $this->cronbach(count($item_sum), $item_dispersion, $score_dispersion);
-        $student_top = $this->student_divide($score, $people, 0);
-        $student_under = $this->student_divide($score, $people, 1);
+        $item_dispersion = $this->item_dispersion($data['people'], $item_sum, 1);
+        $data['cronbach'] = $this->cronbach(count($item_sum), $item_dispersion, $data['score_dispersion']);
+        $student_top = $this->student_divide($score, $data['people'], 0);
+        $student_under = $this->student_divide($score, $data['people'], 1);
         $top_difficulty = $this->accuracy_rate($array_file, $student_top);
         $under_difficulty = $this->accuracy_rate($array_file, $student_under);
-        $item_identification = $this->item_identification($top_difficulty, $under_difficulty);
+        $item_discrimination = $this->item_discrimination($top_difficulty, $under_difficulty);
+        $select = $this->student_group($data['people'], 5);
+        $analysis = $this->group_divide($score, $select);
+        //設問解答分析図
+        foreach($analysis as $analysis_key => $analysis_value):
+            $student_difficulty[] = $this->accuracy_rate($array_file, $analysis_value);
+        endforeach;
+        $data['student_difficulty'] = $student_difficulty;
         $file->close();
-        return array($item_identification, $item_difficulty, $cronbach);
+        debug($data);
+        return array($item_discrimination, $item_difficulty, $data);
     }
     // 素点返す関数
     public function student_score($array_line = array(), $key)
@@ -129,7 +138,7 @@ class Advice extends AppModel{
         $cronbach = ($item / ($item - 1)) * (1 - ($item_dispersion / $score_dispersion));
         return $cronbach;
     }
-    // iはループカウンタ
+    // iはループカウンタ,arsortは降順、asortは昇順
     public function student_divide($score = array(), $people = null, $bool = 0)
     {
         if($bool == 1)
@@ -148,7 +157,7 @@ class Advice extends AppModel{
         sort($student_divide);
         return $student_divide;
     }
-    // 群に分けたやつの項目毎の識別力を返す
+    // 群に分けたやつの項目毎の難易度を返す
     public function accuracy_rate($array_file = array(), $basic = array())
     {
         $i = 0;
@@ -164,13 +173,48 @@ class Advice extends AppModel{
         $item_difficulty = $this->item_difficulty($item_sum, $i);
         return $item_difficulty;
     }
-    public function item_identification($top_difficulty, $under_difficulty)
+    public function item_discrimination($top_difficulty, $under_difficulty)
     {
         for($i = 0;$i < count($top_difficulty); $i++)
         {
-            $item_identification[$i] = $top_difficulty[$i] - $under_difficulty[$i];
+            $item_discrimination[$i] = $top_difficulty[$i] - $under_difficulty[$i];
         }
-        return $item_identification;
+        return $item_discrimination;
+    }
+    // $nはループカウンタ　divide_numberには何郡に分けるか数字
+    // ここでは添え字を決める
+    public function student_group($people = null, $divide_number = null)
+    {
+        $n = $divide_number;
+        for($i = 0;$i < $n; $i++)
+        {
+            if(0 == ($people % $divide_number)){
+                $reference_value[$i] = $people / $divide_number;
+                continue;
+            }
+            $reference_value[$i] = ceil($people / $divide_number);
+            $people = $people - $reference_value[$i];
+            $divide_number = $divide_number - 1;
+        }
+        return $reference_value;
+    }
+    public function group_divide($score = array(), $basic_value = array())
+    {
+        arsort($score);
+        $i = 0;
+        $j = 0;
+        foreach($score as $key => $value):
+            if($i == $basic_value[$j]){
+                $basic_value[$j] = $basic_value[$j++] + $basic_value[$j];
+            }
+            $group_divide_key[$j][$i] = $key;
+            $i++;
+        endforeach;
+        //$jは$basic_value の値-1
+        for($i = 0;$i <= $j; $i++){
+            sort($group_divide_key[$i]);
+        }
+        return $group_divide_key;
     }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
