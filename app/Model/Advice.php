@@ -48,8 +48,13 @@ class Advice extends AppModel{
         $top_difficulty = $this->accuracy_rate($array_file, $student_top);
         $under_difficulty = $this->accuracy_rate($array_file, $student_under);
         $item_discrimination = $this->item_discrimination($top_difficulty, $under_difficulty);
-        $data['select'] = $this->student_group($data['people'], 5);
-
+        $select = $this->student_group($data['people'], 5);
+        $analysis = $this->group_divide($score, $select);
+        //設問解答分析図
+        foreach($analysis as $analysis_key => $analysis_value):
+            $student_difficulty[] = $this->accuracy_rate($array_file, $analysis_value);
+        endforeach;
+        $data['student_difficulty'] = $student_difficulty;
         $file->close();
         debug($data);
         return array($item_discrimination, $item_difficulty, $data);
@@ -133,7 +138,7 @@ class Advice extends AppModel{
         $cronbach = ($item / ($item - 1)) * (1 - ($item_dispersion / $score_dispersion));
         return $cronbach;
     }
-    // iはループカウンタ,
+    // iはループカウンタ,arsortは降順、asortは昇順
     public function student_divide($score = array(), $people = null, $bool = 0)
     {
         if($bool == 1)
@@ -181,7 +186,7 @@ class Advice extends AppModel{
     public function student_group($people = null, $divide_number = null)
     {
         $n = $divide_number;
-        for($i = 0;$i < $n;$i++)
+        for($i = 0;$i < $n; $i++)
         {
             if(0 == ($people % $divide_number)){
                 $reference_value[$i] = $people / $divide_number;
@@ -193,7 +198,24 @@ class Advice extends AppModel{
         }
         return $reference_value;
     }
-
+    public function group_divide($score = array(), $basic_value = array())
+    {
+        arsort($score);
+        $i = 0;
+        $j = 0;
+        foreach($score as $key => $value):
+            if($i == $basic_value[$j]){
+                $basic_value[$j] = $basic_value[$j++] + $basic_value[$j];
+            }
+            $group_divide_key[$j][$i] = $key;
+            $i++;
+        endforeach;
+        //$jは$basic_value の値-1
+        for($i = 0;$i <= $j; $i++){
+            sort($group_divide_key[$i]);
+        }
+        return $group_divide_key;
+    }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
     {
