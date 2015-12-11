@@ -25,11 +25,13 @@ class Advice extends AppModel{
         //人数や、平均点、最高点、など
         $data['people'] = count($array_file);
         $data['average'] = $this->score_average($score, $data['people']);
+        $data['median'] = $this->score_median($score);
+        $data['mode'] = $this->score_mode($score);
         //普遍分散を返す
         $data['score_dispersion'] = $this->score_dispersion($score, $data['average']);
-
         $data['top_score'] = max($score);
         $data['low_score'] = min($score);
+        $data['field'] = $data['top_score'] - $data['low_score'];
         // 問題数をとってくる関数
         $item_sum = $this->item_sum($array_line);
         //項目困難度の算出
@@ -55,8 +57,8 @@ class Advice extends AppModel{
             $student_difficulty[] = $this->accuracy_rate($array_file, $analysis_value);
         endforeach;
         $data['student_difficulty'] = $student_difficulty;
-        $file->close();
         debug($data);
+        $file->close();
         return array($item_discrimination, $item_difficulty, $data);
     }
     // 素点返す関数
@@ -215,6 +217,26 @@ class Advice extends AppModel{
             sort($group_divide_key[$i]);
         }
         return $group_divide_key;
+    }
+    //中央値を求める。
+    public function score_median($score = array()){
+		sort($score);
+		if (count($score) % 2 == 0){
+			return (($score[(count($score) / 2) - 1] + $score[((count($score) / 2))]) / 2);
+		}else{
+			return ($score[floor(count($score)/2)]);
+		}
+	}
+    //最頻値を求める
+    public function score_mode($score = array())
+    {
+    	//最頻値を求める。その値の出現回数を値とした配列。値はkeyになる。
+    	$data = array_count_values($score);
+        //配列から出現回数の最大を取得する。
+    	$max = max($data);
+        //$dataの中から$max回数のkeyを取り出すkeyには値が入っている。
+    	$result = array_keys($data, $max);
+    	return $result;
     }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
