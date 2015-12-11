@@ -57,6 +57,7 @@ class AdvicesController extends AppController{
             $advices = $this->Advice->find('all');
             //アドバイスDBをセットする
             $this->set('Advice',$advices);
+
             if($this->Advice->save($this->request->data))
 			{
                 // メッセージをセットしてリダイレクトする
@@ -79,4 +80,5 @@ class AdvicesController extends AppController{
 	{
 
     }
+
 }
