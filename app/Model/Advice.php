@@ -26,7 +26,9 @@ class Advice extends AppModel{
         $data['people'] = count($array_file);
         $data['average'] = $this->score_average($score, $data['people']);
         $data['median'] = $this->score_median($score);
-        $data['mode'] = $this->score_mode($score);
+        $tmp = $this->score_mode($score);
+        $data['mode'] = $tmp[0];
+        $data['mode_number'] = $tmp[1]; 
         //普遍分散を返す
         $data['score_dispersion'] = $this->score_dispersion($score, $data['average']);
         $data['top_score'] = max($score);
@@ -36,13 +38,7 @@ class Advice extends AppModel{
         $item_sum = $this->item_sum($array_line);
         //項目困難度の算出
         $item_difficulty = $this->item_difficulty($item_sum, $data['people']);
-        /* 項目の得点合計や平均点のところ
-        ここは項目の困難度とクロンバックで使う項目分散のところ
-        各項目の分散値を表す式。1問2点の問題があったとすると
-        100人中98人正解したとすると196点となる。また、2人が不正解で不正解者は0点となっている
-        ここでの平均点は合計点の200 / 100は2つまり配点を定める必要がでてくる。1.98点となる
-        ただし、1点を基準としてやる問題であれば 1 で問題はない。
-        */
+        /* 項目の得点合計や平均点のところ */
         $item_dispersion = $this->item_dispersion($data['people'], $item_sum, 1);
         $data['cronbach'] = $this->cronbach(count($item_sum), $item_dispersion, $data['score_dispersion']);
         $student_top = $this->student_divide($score, $data['people'], 0);
@@ -52,12 +48,12 @@ class Advice extends AppModel{
         $item_discrimination = $this->item_discrimination($top_difficulty, $under_difficulty);
         $select = $this->student_group($data['people'], 5);
         $analysis = $this->group_divide($score, $select);
-        //設問解答分析図
+        //設問解答率分析図
         foreach($analysis as $analysis_key => $analysis_value):
             $student_difficulty[] = $this->accuracy_rate($array_file, $analysis_value);
         endforeach;
         $data['student_difficulty'] = $student_difficulty;
-        debug($data);
+        //debug($data);
         $file->close();
         return array($item_discrimination, $item_difficulty, $data);
     }
@@ -72,7 +68,7 @@ class Advice extends AppModel{
             if($problem_number != 0)
             {
                 //素点を求める
-                $score[$key] += $problem_point;
+                $score[$key] += (int)$problem_point;
             }
         endforeach;
         return $score[$key];
@@ -236,7 +232,7 @@ class Advice extends AppModel{
     	$max = max($data);
         //$dataの中から$max回数のkeyを取り出すkeyには値が入っている。
     	$result = array_keys($data, $max);
-    	return $result;
+    	return array($result, $max);
     }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
