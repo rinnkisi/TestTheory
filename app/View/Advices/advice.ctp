@@ -33,6 +33,7 @@
         }
     endforeach;
     echo '</font>'."<BR>";
+    echo "最頻値回数:".'<font color = "red">'.$Data[2]['mode_number'].'</font>'."<BR>";
     echo "　　　分散:".'<font color = "red">'.$Data[2]['score_dispersion'].'</font>'."<BR>";
     echo "　　最高点:".'<font color = "red">'.$Data[2]['top_score'].'</font>'."<BR>";
     echo "　　最低点:".'<font color = "red">'.$Data[2]['low_score'].'</font>'."<BR>";
@@ -40,24 +41,35 @@
     echo "<BR>";
 
     foreach($Data[2]['student_difficulty'][0] as $key => $value):
+        //echo $key;
+        //echo "項目識別度".$Data[0][$key];
+        //echo "項目困難度".$data[$key]."<BR>";
     ?>
-    <div id = "<?php echo $key; ?>" style = "width: 310px; height: 400px; margin: 0"></div>
-    <?php  $key1 = '#'+$key;
-    ?>
-    <script type="text/javascript">
-    $(function (){
-        var key = "<?php echo $key; ?>";
-        $(key).highcharts({
+    <div id = "<?php echo "con".$key;?>"; style = "margin-left: 100px;width: 310px; height: 400px; float: left;"></div>
+    <script type = "text/javascript">
+    $(function(){
+        var charts = "<?php echo "#con".$key;?>";
+        var item_number = "<?php echo $key+1;?>";
+        //文字列でとってきているため数値型に変換しないといけない。1が上位5が下位
+        var item_1 = Number("<?php echo $Data[2]['student_difficulty'][0][$key];?>");
+        var item_2 = Number("<?php echo $Data[2]['student_difficulty'][1][$key];?>");
+        var item_3 = Number("<?php echo $Data[2]['student_difficulty'][2][$key];?>");
+        var item_4 = Number("<?php echo $Data[2]['student_difficulty'][3][$key];?>");
+        var item_5 = Number("<?php echo $Data[2]['student_difficulty'][4][$key];?>");
+        var item = [item_1,item_2,item_3,item_4,item_5];
+        $(charts).highcharts({
             chart: {
                 type: 'line'
             },
             title: {
-                text: '設問解答率分析図'.$
+                text: '設問解答率分析図 項目'+item_number
             },
             xAxis: {
                 categories: [1,2,3,4,5]
             },
             yAxis: {
+                max:1,
+                min:0,
                 title: {
                     text: '正答率'
                 }
@@ -70,9 +82,12 @@
                     enableMouseTracking: true
                 }
             },
+            credits: {
+                enabled: false
+            },
             series: [{
-                name: '1',
-                data: [7.0, 6.9, 9.5, 14.5, 2.3]
+                name: "項目"+item_number,
+                data: [item_5, item_4, item_3, item_2, item_1]
             }]
         });
     });
