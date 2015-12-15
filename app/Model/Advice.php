@@ -49,15 +49,16 @@ class Advice extends AppModel{
         $top_difficulty = $this->accuracy_rate($array_file, $student_top);
         $under_difficulty = $this->accuracy_rate($array_file, $student_under);
         $item_discrimination = $this->item_discrimination($top_difficulty, $under_difficulty);
-        /* S-P表分析 */
+        /* S-P表分析 levelではそれぞれのソートで必要な値を決める */
         arsort($score);
         $right_sum = $this->student_level($array_line, $item_sum);
-        $student_sort = $this->student_sort($score, $right_sum, pow(count($score), 3));
-        $right_item = $this->right_item($item_sum);
-        debug($right_item);
+        $student_key = $this->student_sort($score, $right_sum, pow(count($score), 3));
+        $item_level = $this->item_level($array_line, $right_sum);
+        $item_key = $this->item_sort($item_sum, $item_level, pow(count($item_sum), 3));
+        debug($item_key);
         /* 設問解答率分析図 */
         $select = $this->student_group($data['people'], 5);
-        $analysis = $this->group_divide($student_sort, $select);
+        $analysis = $this->group_divide($student_key, $select);
         foreach($analysis as $analysis_key => $analysis_value):
             $student_difficulty[] = $this->accuracy_rate($array_file, $analysis_value);
         endforeach;
@@ -243,6 +244,7 @@ class Advice extends AppModel{
     	$result = array_keys($data, $max);
     	return array($result, $max);
     }
+    //　正答数から生徒のレベルをみる(同点の場合にどちらが高いか分かる)
     public function student_level($array_line = array(), $item_sum = array())
     {
         foreach($array_line as $key => $value)
@@ -268,11 +270,39 @@ class Advice extends AppModel{
         $result = array_keys($score);
         return $result;
     }
-    public function right_item($item_sum = array(), $right_sum = array())
+    //　生徒の正答数から問題のレベルをみる(同点の場合にどちらが高いか分かる)
+    public function item_level($array_line = array(), $right_sum = array())
+    {
+        foreach($array_line as $key => $value)
+        {
+            foreach($value as $value_key => $value_number)
+            {
+                // value_key配列の0番目意外と外れ意外のとき条件文に入る
+                if($value_number == !0 && $value_key != 0)
+                {
+                    //値があればそのまま足し算でなければ今のを入れる
+                    if(!empty($result[$value_key])){
+                        $result[$value_key] += $right_sum[$key];
+                        continue;
+                    }
+                    $result[$value_key] = $right_sum[$key];
+                    continue;
+                }
+            }
+        }
+        return $result;
+    }
+    public function item_sort($item_sum = array(), $item_level = array(), $define = null)
     {
         arsort($item_sum);
-
-        return $item_sum;
+        debug($item_sum);
+        foreach($item_sum as $key => $value):
+            $item_sum[$key] = (($value * $define) + $item_level[$key+1]);
+        endforeach;
+        arsort($item_sum);
+        debug($item_sum);
+        $result = array_keys($item_sum);
+        return $result;
     }
     // CSVファイルの場合は0を返す
     public function file_check($file_name = null)
