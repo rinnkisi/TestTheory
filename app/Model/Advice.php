@@ -28,7 +28,7 @@ class Advice extends AppModel{
         $data['median'] = $this->score_median($score);
         $tmp = $this->score_mode($score);
         $data['mode'] = $tmp[0];
-        $data['mode_number'] = $tmp[1]; 
+        $data['mode_number'] = $tmp[1];
         //普遍分散を返す
         $data['score_dispersion'] = $this->score_dispersion($score, $data['average']);
         $data['top_score'] = max($score);
@@ -81,7 +81,7 @@ class Advice extends AppModel{
         {
             $sum += $value;
         }
-        return $sum / $basic;
+        return round($sum / $basic, 3);
     }
     // 分散を返す(分散の場合はkeyをプラスしない)
     public function score_dispersion($score = array(), $average = null)
@@ -92,12 +92,12 @@ class Advice extends AppModel{
             $tmp[$key] = (($value - $average) * ($value - $average));
             $sum += $tmp[$key];
         }
-        return $sum / count($score);
+        return round($sum / count($score), 3);
     }
     public function item_difficulty($item = array(), $basic = null)
     {
         foreach ($item as $key => $value):
-            $item_difficulty[$key] = $value / $basic;
+            $item_difficulty[$key] = round(($value / $basic), 3);
         endforeach;
         return $item_difficulty;
     }
@@ -134,7 +134,7 @@ class Advice extends AppModel{
     public function cronbach($item = null, $item_dispersion, $score_dispersion)
     {
         $cronbach = ($item / ($item - 1)) * (1 - ($item_dispersion / $score_dispersion));
-        return $cronbach;
+        return round($cronbach, 3);
     }
     // iはループカウンタ,arsortは降順、asortは昇順
     public function student_divide($score = array(), $people = null, $bool = 0)
@@ -175,7 +175,7 @@ class Advice extends AppModel{
     {
         for($i = 0;$i < count($top_difficulty); $i++)
         {
-            $item_discrimination[$i] = $top_difficulty[$i] - $under_difficulty[$i];
+            $item_discrimination[$i] = round(($top_difficulty[$i] - $under_difficulty[$i]), 3);
         }
         return $item_discrimination;
     }
