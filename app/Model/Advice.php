@@ -55,10 +55,12 @@ class Advice extends AppModel{
         $student_key = $this->student_sort($score, $right_sum, pow(count($score), 3));
         $item_level = $this->item_level($array_line, $right_sum);
         $item_key = $this->item_sort($item_sum, $item_level, pow(count($item_sum), 3));
-        debug($item_key);
+        $sp_analysis = $this->sp_analysis($array_line, $student_key, $item_key);
+        debug($sp_analysis);
+        
         /* 設問解答率分析図 */
         $select = $this->student_group($data['people'], 5);
-        $analysis = $this->group_divide($student_key, $select);
+        $analysis = $this->group_divide($score, $select);
         foreach($analysis as $analysis_key => $analysis_value):
             $student_difficulty[] = $this->accuracy_rate($array_file, $analysis_value);
         endforeach;
@@ -215,7 +217,7 @@ class Advice extends AppModel{
             if($i == $basic_value[$j]){
                 $basic_value[$j] = $basic_value[$j++] + $basic_value[$j];
             }
-            $group_divide_key[$j][$i] = $value;
+            $group_divide_key[$j][$i] = $key;
             $i++;
         endforeach;
         //$jは$basic_value の値-1
@@ -295,13 +297,21 @@ class Advice extends AppModel{
     public function item_sort($item_sum = array(), $item_level = array(), $define = null)
     {
         arsort($item_sum);
-        debug($item_sum);
         foreach($item_sum as $key => $value):
             $item_sum[$key] = (($value * $define) + $item_level[$key+1]);
         endforeach;
         arsort($item_sum);
-        debug($item_sum);
         $result = array_keys($item_sum);
+        return $result;
+    }
+
+    public function sp_analysis($array_line, $student_key, $item_key)
+    {
+        foreach($student_key as $s_key => $student_value):
+            foreach($item_key as $i_key => $item_value):
+                $result[$student_value][$item_value + 1] = $array_line[$student_value][$item_value + 1];
+            endforeach;
+        endforeach;
         return $result;
     }
     // CSVファイルの場合は0を返す

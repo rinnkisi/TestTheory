@@ -17,8 +17,6 @@
     endforeach;
     //クロンバックのα係数を記述
     echo "<BR>";
-    echo "クロンバックのα係数：";
-    echo '<font color = "red">'.$Data[2]['cronbach'].'</font>'."<BR><BR>";
     echo "　　問題数:".'<font color = "red">'.$Data[2]['item_sum'].'</font>　問'."<BR>";
     echo "受験者人数:".'<font color = "red">'.$Data[2]['people'].'</font>　名'."<BR>";
     echo "　　平均点:".'<font color = "red">'.$Data[2]['average'].'</font>'."<BR>";
@@ -38,7 +36,9 @@
     echo "　　　分散:".'<font color = "red">'.$Data[2]['score_dispersion'].'</font>'."<BR>";
     echo "　　最高点:".'<font color = "red">'.$Data[2]['top_score'].'</font>'."<BR>";
     echo "　　最低点:".'<font color = "red">'.$Data[2]['low_score'].'</font>'."<BR>";
-    echo "データ範囲:".'<font color = "red">'.$Data[2]['field'].'</font>'."<BR>";
+    echo "データ範囲:".'<font color = "red">'.$Data[2]['field'].'</font>'."<BR><BR>";
+    echo "クロンバックのα係数：";
+    echo '<font color = "red">'.$Data[2]['cronbach'].'</font>'."<BR><BR>";
     echo "<BR>";
 /*
     foreach($Data[2]['student_difficulty'][0] as $key => $value):
