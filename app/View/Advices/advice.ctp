@@ -40,7 +40,7 @@
     echo "クロンバックのα係数：";
     echo '<font color = "red">'.$Data[2]['cronbach'].'</font>'."<BR><BR>";
     echo "<BR>";
-/*
+
     foreach($Data[2]['student_difficulty'][0] as $key => $value):
         //echo $key;
         //echo "項目識別度".$Data[0][$key];
@@ -101,7 +101,7 @@ endforeach;
 
     foreach($Data[0] as $key => $value){
 	echo '<tr>';
-    // echo '<td>'. "素点".$score[$key+1].'</td>';
+    // echo '<td>'. "素点".$score[$key+1].'</td>'配列ナンバーなので+1している;
     $number = $key + 1;
     echo '<td>'. $number ."問目：項目識別度".$value.'</td>';
     echo '<td>'. $number ."問目：項目難易度".$data[$key].'</td>';
