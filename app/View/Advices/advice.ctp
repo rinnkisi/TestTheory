@@ -17,8 +17,7 @@
     endforeach;
     //クロンバックのα係数を記述
     echo "<BR>";
-    echo "クロンバックのα係数：";
-    echo '<font color = "red">'.$Data[2]['cronbach'].'</font>'."<BR><BR>";
+    echo "　　問題数:".'<font color = "red">'.$Data[2]['item_sum'].'</font>　問'."<BR>";
     echo "受験者人数:".'<font color = "red">'.$Data[2]['people'].'</font>　名'."<BR>";
     echo "　　平均点:".'<font color = "red">'.$Data[2]['average'].'</font>'."<BR>";
     echo "　　中央値:".'<font color = "red">'.$Data[2]['median'].'</font>'."<BR>";
@@ -37,7 +36,9 @@
     echo "　　　分散:".'<font color = "red">'.$Data[2]['score_dispersion'].'</font>'."<BR>";
     echo "　　最高点:".'<font color = "red">'.$Data[2]['top_score'].'</font>'."<BR>";
     echo "　　最低点:".'<font color = "red">'.$Data[2]['low_score'].'</font>'."<BR>";
-    echo "データ範囲:".'<font color = "red">'.$Data[2]['field'].'</font>'."<BR>";
+    echo "データ範囲:".'<font color = "red">'.$Data[2]['field'].'</font>'."<BR><BR>";
+    echo "クロンバックのα係数：";
+    echo '<font color = "red">'.$Data[2]['cronbach'].'</font>'."<BR><BR>";
     echo "<BR>";
 
     foreach($Data[2]['student_difficulty'][0] as $key => $value):
@@ -45,7 +46,7 @@
         //echo "項目識別度".$Data[0][$key];
         //echo "項目困難度".$data[$key]."<BR>";
     ?>
-    <div id = "<?php echo "con".$key;?>"; style = "margin-left: 100px;width: 310px; height: 400px; float: left;"></div>
+    <div id = "<?php echo "con".$key;?>"; style = "margin-left: 50px;width: 310px; height: 400px; float: left;"></div>
     <script type = "text/javascript">
     $(function(){
         var charts = "<?php echo "#con".$key;?>";
@@ -100,10 +101,10 @@ endforeach;
 
     foreach($Data[0] as $key => $value){
 	echo '<tr>';
-    // echo '<td>'. "素点".$score[$key+1].'</td>';
+    // echo '<td>'. "素点".$score[$key+1].'</td>'配列ナンバーなので+1している;
     $number = $key + 1;
     echo '<td>'. $number ."問目：項目識別度".$value.'</td>';
-    echo '<td>'. $number ."問目：項目困難度".$data[$key].'</td>';
+    echo '<td>'. $number ."問目：項目難易度".$data[$key].'</td>';
 	echo '</tr>';
 	}
 ?>
