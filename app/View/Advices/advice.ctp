@@ -5,12 +5,15 @@
 <?php
     echo $this->Html->script("./highcharts.js");
     echo $this->Html->script("./modules/highcharts.js");
+//    echo $this->Html->script("./jquery.ui.touch-punch.js");
+//    echo $this->Html->script("./jquery.ui.touch-punch.min.js");
     //echo debug($Advice);
-    foreach($Advice as $advice):
+    //foreach($Advice as $advice):
     //echo debug($advice['Advice']['advice']); //アドバイスの参照を行っている部分
-    endforeach;
+    //endforeach;
     //この下の処理でdata[]に項目困難度を入力している。
 ?>
+
 <?php
 
     foreach($Data[1] as $data[]):
@@ -40,7 +43,7 @@
     echo "クロンバックのα係数：";
     echo '<font color = "red">'.$Data[2]['cronbach'].'</font>'."<BR><BR>";
     echo "<BR>";
-
+/*
     foreach($Data[2]['student_difficulty'][0] as $key => $value):
         //echo $key;
         //echo "項目識別度".$Data[0][$key];

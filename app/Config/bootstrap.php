@@ -107,3 +107,4 @@ CakeLog::config('error', array(
 ));
 CakePlugin::load('DebugKit');
 CakePlugin::load('highcharts');
+CakePlugin::load('grid');
