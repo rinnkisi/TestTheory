@@ -15,6 +15,7 @@ class Advice extends AppModel{
         $file = new File($Data['csv']['tmp_name']);
         /*  explode で改行がある時の列を配列として代入 */
         $array_file = explode("\r", $file->read());
+
         /* 1行毎に配列にしてくる */
         foreach ($array_file as $key => $value):
             /* 行ごとに配列にする */
@@ -22,34 +23,39 @@ class Advice extends AppModel{
             /*  1人毎の素点が帰ってくる */
             $score[$key] = $this->student_score($array_line, $key);
         endforeach;
+
         /* 人数や、平均点、最高点、など */
         $data['people'] = count($array_file);
         $data['average'] = $this->score_average($score, $data['people']);
+
         /* 中央値 */
         $data['median'] = $this->score_median($score);
+
         /* 最頻値と最頻値の回数 */
         $score_mode = $this->score_mode($score);
         $data['mode'] = $score_mode[0];
         $data['mode_number'] = $score_mode[1];
+
         /* 普遍分散を返す */
         $data['score_dispersion'] = $this->score_dispersion($score, $data['average']);
+
         /* 最高点や最低点やデータの範囲を返す */
         $data['top_score'] = max($score);
         $data['low_score'] = min($score);
         $data['field'] = $data['top_score'] - $data['low_score'];
 
         /*  問題数をとってくる関数 item_sumには正答数が入っている */
-        $item_sum = $this->item_sum($array_line);
-        $data['item_sum'] = count($item_sum);
+        $item_right_sum = $this->item_sum($array_line);
+        $data['item_sum'] = count($item_right_sum);
 
         /* 項目困難度の算出 */
-        $item_difficulty = $this->item_difficulty($item_sum, $data['people']);
+        $item_difficulty = $this->item_difficulty($item_right_sum, $data['people']);
 
         /* クロンバックのα係数を求める */
-        $item_dispersion = $this->item_dispersion($data['people'], $item_sum, 1);
+        $item_dispersion = $this->item_dispersion($data['people'], $item_right_sum, 1);
         $data['cronbach'] = $this->cronbach($data['item_sum'], $item_dispersion, $data['score_dispersion']);
 
-        /* 受験者を上位群と下位群に分けて識別力を求める箇所 */
+        /* 識別度判定の算出。受験者を上位群と下位群に分けて識別力を求める箇所 */
         $student_top = $this->student_divide($score, $data['people'], 0);
         $student_under = $this->student_divide($score, $data['people'], 1);
         $top_difficulty = $this->accuracy_rate($array_file, $student_top);
@@ -59,14 +65,13 @@ class Advice extends AppModel{
         /* スコアを昇順にソートした結果を以下では用いる */
         arsort($score);
 
-        /* S-P表分析 levelではそれぞれのソートで必要な値を決める */
-        $right_sum = $this->student_level($array_line, $item_sum);
+        /* S-P表分析5群に分割 levelではそれぞれのソートで必要な値を決める */
+        $right_sum = $this->student_level($array_line, $item_right_sum);
         $student_key = $this->student_sort($score, $right_sum, pow(count($score), 3));
         $item_level = $this->item_level($array_line, $right_sum);
-        $item_key = $this->item_sort($item_sum, $item_level, pow(count($item_sum), 3));
-        $sp_analysis = $this->sp_analysis($array_line, $student_key, $item_key);
-        debug($item_sum);
-        $item_caution_value = $this->item_caution_value($sp_analysis, $score, $item_sum);
+        $spitem_key = $this->item_sort($item_right_sum, $item_level, pow(count($item_right_sum), 3));
+        $sp_analysis = $this->sp_analysis($array_line, $student_key, $spitem_key);
+        $item_caution_value = $this->item_caution_value($sp_analysis, $score, $item_right_sum, $spitem_key, $student_key);
 
         /* 設問解答率分析図 */
         $select = $this->student_group($data['people'], 5);
@@ -77,7 +82,7 @@ class Advice extends AppModel{
         $data['student_difficulty'] = $student_difficulty;
         /* debug($data); */
         $file->close();
-        return array($item_discrimination, $item_difficulty, $data);
+        return array($item_difficulty, $item_discrimination, $item_caution_value, $data);
     }
     /*  素点返す関数 */
     public function student_score($array_line = array(), $key)
@@ -128,18 +133,18 @@ class Advice extends AppModel{
     {
         foreach ($array_line as $array_key => $array_value):
             foreach($array_value as $key => $value):
-                if(!empty($item_sum[$key]))
+                if(!empty($item_right_sum[$key]))
                 {
-                    $item_sum[$key] += $value;
+                    $item_right_sum[$key] += $value;
                     continue;
                 }
                 /* 値がなかった場合には最初人の解答データを与える */
-                $item_sum[$key] = $value;
+                $item_right_sum[$key] = $value;
             endforeach;
         endforeach;
-        unset($item_sum[0]);
-        $item_sum = array_values($item_sum);
-        return $item_sum;
+        unset($item_right_sum[0]);
+        $item_right_sum = array_values($item_right_sum);
+        return $item_right_sum;
     }
     /*  項目毎の分散値を求めてその合計値を返す関数 項目合計分散値 */
     /*  powは2乗の計算を行う */
@@ -189,8 +194,8 @@ class Advice extends AppModel{
                 $i++;
             }
         endforeach;
-        $item_sum = $this->item_sum($tmp_line);
-        $item_difficulty = $this->item_difficulty($item_sum, $i);
+        $item_right_sum = $this->item_sum($tmp_line);
+        $item_difficulty = $this->item_difficulty($item_right_sum, $i);
         return $item_difficulty;
     }
     public function item_discrimination($top_difficulty, $under_difficulty)
@@ -257,7 +262,7 @@ class Advice extends AppModel{
     	return array($result, $max);
     }
     /* 　正答数から生徒のレベルをみる(同点の場合にどちらが高いか分かる) */
-    public function student_level($array_line = array(), $item_sum = array())
+    public function student_level($array_line = array(), $item_right_sum = array())
     {
         foreach($array_line as $key => $value)
         {
@@ -266,7 +271,7 @@ class Advice extends AppModel{
             {
                 if($value_number == !0 && $value_key != 0)
                 {
-                    $result[$key] += $item_sum[$value_key - 1];
+                    $result[$key] += $item_right_sum[$value_key - 1];
                 }
             }
         }
@@ -304,33 +309,79 @@ class Advice extends AppModel{
         }
         return $result;
     }
-    public function item_sort($item_sum = array(), $item_level = array(), $define = null)
+    public function item_sort($item_right_sum = array(), $item_level = array(), $define = null)
     {
-        arsort($item_sum);
-        foreach($item_sum as $key => $value):
-            $item_sum[$key] = (($value * $define) + $item_level[$key+1]);
+        arsort($item_right_sum);
+        foreach($item_right_sum as $key => $value):
+            $item_right_sum[$key] = (($value * $define) + $item_level[$key+1]);
         endforeach;
-        arsort($item_sum);
-        $result = array_keys($item_sum);
+        arsort($item_right_sum);
+        $result = array_keys($item_right_sum);
         return $result;
     }
 
-    public function sp_analysis($array_line, $student_key, $item_key)
+    public function sp_analysis($array_line, $student_key, $spitem_key)
     {
         foreach($student_key as $s_key => $student_value):
-            foreach($item_key as $i_key => $item_value):
+            foreach($spitem_key as $i_key => $item_value):
                 $result[$student_value][$item_value + 1] = $array_line[$student_value][$item_value + 1];
             endforeach;
         endforeach;
         return $result;
     }
 
-    public function item_caution_value($sp_analysis, $score, $item_sum, $item_key)
+    public function item_caution_value($sp_analysis, $score, $item_right_sum, $spitem_key, $student_key)
     {
-        foreach($sp_analysis):
-
-        endforeach;
-
+        //[$spitem_key[$i]+1]はvalue配列が1からしか対応していないため加算
+        for($i = 0; $i < count($spitem_key); $i++)
+        {
+            $j = 0;//ループカウンタ
+            $result_a[$i] = 0;
+            $result_b[$i] = 0;
+            foreach($sp_analysis as $key => $value):
+                if($j < $item_right_sum[$spitem_key[$i]])
+                {
+                    if($value[$spitem_key[$i]+1] == 0)
+                    {
+                        $result_a[$i] += $score[$key];
+                    }
+                }
+                else
+                {
+                    if($value[$spitem_key[$i]+1] == 1)
+                    {
+                        $result_b[$i] += $score[$key];
+                    }
+                }
+                $j++;
+            endforeach;
+        }
+        /* cをもとめるための計算式 とついでにdを代入処理*/
+        for($i = 0; $i < count($spitem_key); $i++)
+        {
+            $result_c[$i] = 0;
+            $result_d[$i] = $item_right_sum[$spitem_key[$i]];
+            foreach($student_key as $key => $value):
+                if($key == $item_right_sum[$spitem_key[$i]])
+                {
+                    break;
+                }
+                $result_c[$i] += $score[$value];
+            endforeach;
+        }
+        $result_e = $this->score_average($score, count($score));
+        /* 注意係数をもとめる計算式 */
+        for($i = 0; $i < count($spitem_key); $i++)
+        {
+            $tmp_left = $result_a[$i] - $result_b[$i];
+            $tmp_right = $result_c[$i] - ($result_d[$i] * $result_e);
+            $result_value[$i] = round($tmp_left / $tmp_right, 3);
+        }
+        foreach($spitem_key as $key => $value)
+        {
+            $result[$value] = $result_value[$key];
+        }
+        ksort($result);
         return $result;
     }
     /*  CSVファイルの場合は0を返す */
