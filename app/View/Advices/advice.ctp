@@ -1,4 +1,4 @@
-
+<div style="margin-left:100px;">
 <h2>分析結果表示</h2>
 <ul>
 
@@ -39,11 +39,13 @@
     echo "　　　分散:".'<font color = "red">'.$Data[3]['score_dispersion'].'</font>'."<BR>";
     echo "　　最高点:".'<font color = "red">'.$Data[3]['top_score'].'</font>'."<BR>";
     echo "　　最低点:".'<font color = "red">'.$Data[3]['low_score'].'</font>'."<BR>";
-    echo "データ範囲:".'<font color = "red">'.$Data[3]['field'].'</font>'."<BR><BR>";
+    echo "データ範囲:".'<font color = "red">'.$Data[3]['field'].'</font>'."<BR>";
     echo "クロンバックのα係数：";
-    echo '<font color = "red">'.$Data[3]['cronbach'].'</font>'."<BR><BR>";
+    echo '<font color = "red">'.$Data[3]['cronbach'].'</font>'."<BR>";
     echo "<BR>";
-
+?>
+</div>
+<?php
     foreach($Data[3]['student_difficulty'][0] as $key => $value):
         //echo $key;
         //echo "項目識別度".$Data[0][$key];
@@ -78,8 +80,10 @@
                     text: '正答率'
                 }
             },
+
             plotOptions: {
                 line: {
+                    color:'#000000',
                     dataLabels: {
                         enabled: true
                     },
