@@ -3,6 +3,8 @@ App::uses('File', 'Utility');
 class Advice extends AppModel{
     public $useTable = 'advices';
     /* Data にはcsvファイルの情報が入っている */
+
+
     public function calculator($Data = null)
     {
         /* ここで使うのはAdvicesテーブル */
@@ -23,7 +25,6 @@ class Advice extends AppModel{
             /*  1人毎の素点が帰ってくる */
             $score[$key] = $this->student_score($array_line, $key);
         endforeach;
-
         /* 人数や、平均点、最高点、など */
         $data['people'] = count($array_file);
         $data['average'] = $this->score_average($score, $data['people']);
@@ -62,7 +63,9 @@ class Advice extends AppModel{
         $under_difficulty = $this->accuracy_rate($array_file, $student_under);
         $item_discrimination = $this->item_discrimination($top_difficulty, $under_difficulty);
 
-        /* スコアを昇順にソートした結果を以下では用いる */
+        /* ヒストグラムを求める */
+        $data['score'] = $this->histogram($score, $data['item_sum']);
+        /* $scoreを代入スコアを昇順にソートした結果を以下では用いる */
         arsort($score);
 
         /* S-P表分析5群に分割 levelではそれぞれのソートで必要な値を決める */
@@ -244,9 +247,12 @@ class Advice extends AppModel{
     /* 中央値を求める。 */
     public function score_median($score = array()){
 		sort($score);
-		if (count($score) % 2 == 0){
+		if (count($score) % 2 == 0)
+        {
 			return (($score[(count($score) / 2) - 1] + $score[((count($score) / 2))]) / 2);
-		}else{
+		}
+        else
+        {
 			return ($score[floor(count($score)/2)]);
 		}
 	}
@@ -269,7 +275,7 @@ class Advice extends AppModel{
             $result[$key] = 0;
             foreach($value as $value_key => $value_number)
             {
-                if($value_number == !0 && $value_key != 0)
+                if($value_number != 0 && $value_key != 0)
                 {
                     $result[$key] += $item_right_sum[$value_key - 1];
                 }
@@ -295,7 +301,7 @@ class Advice extends AppModel{
             foreach($value as $value_key => $value_number)
             {
                 /*  value_key配列の0番目意外と外れ意外のとき条件文に入る */
-                if($value_number == !0 && $value_key != 0)
+                if($value_number != 0 && $value_key != 0)
                 {
                     /* 値があればそのまま足し算でなければ今のを入れる */
                     if(!empty($result[$value_key])){
@@ -382,6 +388,63 @@ class Advice extends AppModel{
             $result[$value] = $result_value[$key];
         }
         ksort($result);
+        return $result;
+    }
+    public function histogram($score = array(), $item_sum = null)
+    {
+        sort($score);
+        //debug($score);
+        $i = 0;
+        // 初期値は最小の値
+        $data_range = $score[0];
+        //切り捨てを行うために使用。
+        $digit = 10;
+        $data_range = (floor($data_range / $digit) * $digit);
+        //debug($data_range);
+        foreach($score as $key => $value):
+            if($value < ($data_range+$digit) && ($key+1) != count($score))
+            {
+                $i++;
+                continue;
+            }
+            else
+            {
+                if($data_range != $item_sum){
+                    $result['count'][$key] = $i;
+                    $result['number'][$key] = $data_range;
+                    //値が同じだった場合
+                    if($data_range == $value)
+                    {
+                        $value++;
+                    }
+                    $data_range = (floor($value / $digit) * $digit);
+                    if(($key+1) == count($score) && $item_sum == $data_range){
+                        $i = 1;
+                    }
+                }
+                if(($key+1) == count($score)){
+                    if($score[$key-1] == $score[$key] && $value == $item_sum){
+                        $i++;
+                        $result['count'][$key+1] = $i;
+                        $result['number'][$key+1] = $data_range;
+                        break;
+                    }
+                    if($value == $item_sum){
+                        $result['count'][$key+1] = $i;
+                        $result['number'][$key+1] = $data_range;
+                        break;
+                    }
+                    $i++;
+                    $result['count'][$key] = $i;
+                    $result['number'][$key] = $data_range;
+                }
+                $i = 1;
+                continue;
+            }
+        endforeach;
+        $result['count'] = array_merge($result['count']);
+        $result['number'] = array_merge($result['number']);
+        //debug($result);
         return $result;
     }
     /*  CSVファイルの場合は0を返す */

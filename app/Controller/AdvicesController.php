@@ -1,6 +1,33 @@
 <?php
 class AdvicesController extends AppController{
+	public $uses = array('Advice');
 	public $helpers = array('Form', 'Html', 'Js', 'Time');
+
+	public function form()
+	{
+		$this->set('data', $this->Session->read('session_data'));
+		if($this->Session->read('session_data'))
+		{
+			$data = array('Advice' => array('advice' => $this->Session->read('session_data')));
+			// 登録する項目（フィールド指定）
+			$fields = array('advice');
+			// 新規登録
+			$this->Advice->save($data, false, $fields);
+			//$this->Advice->save($this->Session->read('session_data'));
+			$this->Session->delete('session_data');
+		}
+		else{
+			if($this->request->is('post'))
+			{
+			 	//var_dump($this->request->data);
+				$this->Session->write('session_data', $this->request->data['Advice']['advice']);
+				$this->set('data', $this->Session->read('session_data'));
+
+				$this->redirect('form');
+				//$this->Article->save($this->data);
+			}
+		}
+	}
     public function login()
 	{
 
