@@ -45,8 +45,11 @@ class Advice extends AppModel{
         $data['low_score'] = min($score);
         $data['field'] = $data['top_score'] - $data['low_score'];
 
-        /*  問題数をとってくる関数 item_sumには正答数が入っている */
+        /*  問題数をとってくる関数 item_sumから正答数がとってきている */
         $item_right_sum = $this->item_sum($array_line);
+        $data['item_right_sum'] = $item_right_sum;
+        $item_incorrect = $this->item_incorrect($item_right_sum, $data['people']);
+        $data['item_incorrect'] = $item_incorrect;
         $data['item_sum'] = count($item_right_sum);
 
         /* 項目困難度の算出 */
@@ -76,6 +79,13 @@ class Advice extends AppModel{
         $sp_analysis = $this->sp_analysis($array_line, $student_key, $spitem_key);
         $item_caution_value = $this->item_caution_value($sp_analysis, $score, $item_right_sum, $spitem_key, $student_key);
 
+        /* 良い問題か悪い問題かを判断する */
+        $item_grouping = $this->item_grouping($item_difficulty, $item_discrimination, $item_caution_value);
+        //debug($item_grouping);
+        $data['bad'] = $item_grouping['bad'];
+        $data['very_bad'] = $item_grouping['very_bad'];
+        $data['good'] = $item_grouping['good'];
+        $data['very_good'] = $item_grouping['very_good'];
         /* 設問解答率分析図 */
         $select = $this->student_group($data['people'], 5);
         $analysis = $this->group_divide($score, $select);
@@ -446,6 +456,41 @@ class Advice extends AppModel{
         $result['number'] = array_merge($result['number']);
         //debug($result);
         return $result;
+    }
+    /* 不正解数を返す */
+    public function item_incorrect($item_right = array(), $people){
+        $result[] = 0;
+        foreach($item_right as $key => $value):
+            $result[$key] = $people - $value;
+        endforeach;
+        return $result;
+    }
+
+    public function item_grouping($diff, $disc, $caution){
+        $i = 0;
+        $j = 0;
+        foreach($diff as $key => $value):
+            if(($value < 0.4 || 0.8 <= $value) && $disc[$key] < 0.3 && 0.5 <= $caution[$key]){
+                $bad[$i] = $key + 1;
+                if(($value < 0.3 || 0.9 <= $value) && $disc[$key] < 0.2 && 0.75 <= $caution[$key]){
+                    $very_bad[$i] = $key + 1;
+                }
+                $i++;
+            }
+            if(0.4 <= $value && $value < 0.8 && (0.3 <= $disc[$key] || $disc[$key] < 0.4) && $caution[$key] < 0.5){
+                $good[$j] = $key + 1;
+                if(0.4 <= $value && $value < 0.8 && 0.4 <= $disc[$key] && $caution[$key] < 0.5){
+                    $very_good[$j] = $key + 1;
+                }
+                $j++;
+            }
+        endforeach;
+        $bad = array_values($bad);
+        $very_bad = array_values($very_bad);
+        $good = array_values($good);
+        $very_good = array_values($very_good);
+        return array('bad' => $bad, 'very_bad' => $very_bad,
+         'good' => $good, 'very_good' => $very_good);
     }
     /*  CSVファイルの場合は0を返す */
     public function file_check($file_name = null)
