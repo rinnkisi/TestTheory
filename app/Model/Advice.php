@@ -9,10 +9,11 @@ class Advice extends AppModel{
     {
         /* ここで使うのはAdvicesテーブル */
         $Advice = $this->find('all');
-        /* アドバイスの参照を行っている部分
+        /* アドバイスの参照を行っている部分        */
         foreach($Advice as $advice_value):
+            //debug($advice_value);
         endforeach;
-        */
+
         /* cakephpの File ユーティリティ(ファイルの読み書きやフォルダ内のファイル名一覧の取得) */
         $file = new File($Data['csv']['tmp_name']);
         /*  explode で改行がある時の列を配列として代入 */
@@ -491,6 +492,48 @@ class Advice extends AppModel{
         $very_good = array_values($very_good);
         return array('bad' => $bad, 'very_bad' => $very_bad,
          'good' => $good, 'very_good' => $very_good);
+    }
+
+//項目説明データベース用
+    public function description_group($data = array())
+    {
+        foreach($data[0] as $key => $value):
+            if($value < 0.3){
+                $result[0][$key] = '1a';
+            }else if($value < 0.4){
+                $result[0][$key] = '1b';
+            }else if(0.8 <= $value){
+                $result[0][$key] = '1c';
+            }else if(0.9 <= $value){
+                $result[0][$key] = '1d';
+            }else{
+                $result[0][$key] = '1e';
+            }
+            if($data[1][$key] < 0.2){
+                $result[1][$key] = '2a';
+            }else if($data[1][$key] < 0.3){
+                $result[1][$key] = '2b';
+            }else if(0.3 <= $data[1][$key] && $data[1][$key] < 0.4){
+                $result[1][$key] = '2c';
+            }else{
+                $result[1][$key] = '2d';
+            }
+            if(0.75 <= $data[2][$key]){
+                $result[2][$key] = '3a';
+            }else if(0.5 <= $data[2][$key] && $data[2][$key] < 0.75){
+                $result[2][$key] = '3b';
+            }else{
+                $result[2][$key] = '3c';
+            }
+        endforeach;
+        return $result;
+    }
+    public function item_connect($item = array())
+    {
+        foreach($item[0] as $key => $value):
+             $result[$key] = $value.$item[1][$key].$item[2][$key];
+        endforeach;
+        return $result;
     }
     /*  CSVファイルの場合は0を返す */
     public function file_check($file_name = null)

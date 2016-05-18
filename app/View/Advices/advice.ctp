@@ -13,17 +13,6 @@
     //この下の処理でdata[]に項目困難度を入力している。
 ?>
 
-<div id="modal-content-01" class="modal-content">
-	<!-- モーダルウィンドウのコンテンツ開始 -->
-	<p>1つ目のモーダルウィンドウです。全体を囲むdiv要素に[id="modal-content-01"]が設定されています。</p>
-	<p>「閉じる」か「背景」をクリックするとモーダルウィンドウを終了します。</p>
-	<p><a id="modal-close" class="button-link">閉じる</a></p>
-	<!-- モーダルウィンドウのコンテンツ終了 -->
-</div>
-<!-- 1つ目のコンテンツ [終了] -->
-
-<p><a class="modal button-link" data-target="modal-content-01">クリックすると、1つ目のモーダルウィンドウを開きます。</a></p>
-
 <?php
     //クロンバックのα係数を記述
     echo "<BR>";
@@ -130,123 +119,218 @@ $(function () {
 
 <?php
     //debug($Data[3]['bad']);
-    echo "能力を判定する上で不適切と思われる問題が".count($Data[3]['bad'])."個ありました"."<BR>";
+    echo "・能力を判定する上で不適切と思われる問題が".count($Data[3]['bad'])."個ありました"."<BR>";
+    echo "※項目番号をクリックで詳細閲覧できます<BR>";
     foreach($Data[3]['bad'] as $key => $value):
-        echo '<table>';
-        echo '<tr>';
+        $value = $value-1;
+        ?>
+        <div id="<?php echo "modal-content-".$value;?>" class="modal-content">
+        <p>
+            <div id = "<?php echo "page".$value;?>" style = "margin-left: 30px;margin-right: 15px;width:400px; height:550px; float: left;">
+                <div id = "<?php echo "con2".$value;?>" style = "margin-left: 40px;width: 310px; height: 400px; float: left;"></div>
+                <script type = "text/javascript">
+                $(function(){
+                    var charts = "<?php echo "#con2".$value;?>";
+                    var item_number = "<?php echo $value+1;?>";
+                    //文字列でとってきているため数値型に変換しないといけない。1が上位5が下位
+                    var item_1 = Number("<?php echo $Data[3]['student_difficulty'][0][$value];?>");
+                    var item_2 = Number("<?php echo $Data[3]['student_difficulty'][1][$value];?>");
+                    var item_3 = Number("<?php echo $Data[3]['student_difficulty'][2][$value];?>");
+                    var item_4 = Number("<?php echo $Data[3]['student_difficulty'][3][$value];?>");
+                    var item_5 = Number("<?php echo $Data[3]['student_difficulty'][4][$value];?>");
+                    var item = [item_1,item_2,item_3,item_4,item_5];
+                    $(charts).highcharts({
+                        chart: {
+                            type: 'line'
+                        },
+                        title: {
+                            text: '設問解答率分析図 項目'+item_number
+                        },
+                        xAxis: {
+                            categories: ['Lv1','Lv2','Lv3','Lv4','Lv5'],
+                        },
+                        yAxis: {
+                            max:1,
+                            min:0,
+                            title: {
+                                text: '正答率'
+                            }
+                        },
+                        plotOptions: {
+                            line: {
+                                //color:'#000000',
+                                dataLabels: {
+                                    enabled: true
+                                },
+                                enableMouseTracking: true
+                            }
+                        },
+                        credits: {
+                            enabled: false
+                        },
+                        series: [{
+                            name: "項目"+item_number,
+                            data: [item_5, item_4, item_3, item_2, item_1]
+                        }]
+                    });
+                });
+                </script>
+            <?php
+            echo '<table>';
+            echo '<tr>';
+            echo '<td>'. "正解者数:".$Data[3]['item_right_sum'][$value].'</br>';
+            echo '<td>'. "不正解者数:".$Data[3]['item_incorrect'][$value].'</br>';
+            $Data[0][$value] = $Data[0][$value]*100;
+            echo '<td>'. "正答率: ".$Data[0][$value].'%</br>';
+            echo '</tr>';
+            echo '</table>';
+            echo '<table border="1">';
+            echo '<tr>';
+            echo '<td>'. "項目難易度".$Data[0][$value].'</br>';
+            echo '<td>'. "項目識別度".$Data[1][$value].'</br>';
+            echo '<td>'. "項目注意度".$Data[2][$value].'</br>';
+            echo '</tr>';
+            echo '</table>';
+            echo '</div>';
+            echo "設問解答率分析図は受験者を5群に分けて群ごとに正答率をグラフにしたものです。";
+            echo "左側が低く、右側が高いと良い問題だといえるでしょう";
+            echo "<BR><BR>";
+            echo "<BR>難易度：　".$description[$item_desc[0][$value]];
+            echo "<BR><BR>識別度：　".$description[$item_desc[1][$value]];
+            echo "<BR><BR>注意係数：　".$description[$item_desc[2][$value]];
+?>
+        </p>
+        <p><a id="modal-close" class="button-link">閉じる</a></p>
+        </div>
+
+        <table>
+        <tr>
+            <td>
+                <a class="modal button-link" data-target="<?php echo "modal-content-".$value;?>">
+        <?php
         $key++;
-        echo '<td>'. $key .". 項目 : ".$value;
-        echo '</tr>';
-        echo '</table>';
+        $value++;
+        echo $key .". 項目 : ".$value;
+        ?>
+                </a>
+            <?php echo "<BR>"."次回時の問題作成アドバイス：　"; ?>
+            <?php echo "<BR>".$advice[$item_connect[$value-1]]; ?>
+            </tr>
+        </table>
+        </p>
+        <?php
     endforeach;
-    echo "<BR>";
+    echo "<BR><BR><BR> ";
     //debug($Data[3]['very_bad']);
     //debug($Data[3]['good']);
-    echo "能力を判定する上で適切と思われる問題が".count($Data[3]['very_good'])."個ありました"."<BR>";
+    echo "・能力を判定する上で適切と思われる問題が".count($Data[3]['very_good'])."個ありました"."<BR><BR>";
     foreach($Data[3]['very_good'] as $key => $value):
+        $value = $value-1;
+    ?>
+    <div id="<?php echo "modal-content-".$value;?>" class="modal-content">
+    <p>
+        <div id = "<?php echo "page".$value;?>" style = "margin-left: 30px;margin-right: 15px;width:400px; height:550px; float: left;">
+            <div id = "<?php echo "con2".$value;?>" style = "margin-left: 40px;width: 310px; height: 400px; float: left;"></div>
+            <script type = "text/javascript">
+            $(function(){
+                var charts = "<?php echo "#con2".$value;?>";
+                var item_number = "<?php echo $value+1;?>";
+                //文字列でとってきているため数値型に変換しないといけない。1が上位5が下位
+                var item_1 = Number("<?php echo $Data[3]['student_difficulty'][0][$value];?>");
+                var item_2 = Number("<?php echo $Data[3]['student_difficulty'][1][$value];?>");
+                var item_3 = Number("<?php echo $Data[3]['student_difficulty'][2][$value];?>");
+                var item_4 = Number("<?php echo $Data[3]['student_difficulty'][3][$value];?>");
+                var item_5 = Number("<?php echo $Data[3]['student_difficulty'][4][$value];?>");
+                var item = [item_1,item_2,item_3,item_4,item_5];
+                $(charts).highcharts({
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: '設問解答率分析図 項目'+item_number
+                    },
+                    xAxis: {
+                        categories: ['Lv1','Lv2','Lv3','Lv4','Lv5'],
+                    },
+                    yAxis: {
+                        max:1,
+                        min:0,
+                        title: {
+                            text: '正答率'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            //color:'#000000',
+                            dataLabels: {
+                                enabled: true
+                            },
+                            enableMouseTracking: true
+                        }
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: "項目"+item_number,
+                        data: [item_5, item_4, item_3, item_2, item_1]
+                    }]
+                });
+            });
+            </script>
+        <?php
         echo '<table>';
         echo '<tr>';
-        $key++;
-        echo '<td>'. $key .". 項目 : ".$value;
+        echo '<td>'. "正解者数:".$Data[3]['item_right_sum'][$value].'</br>';
+        echo '<td>'. "不正解者数:".$Data[3]['item_incorrect'][$value].'</br>';
+        $Data[0][$value] = $Data[0][$value]*100;
+        echo '<td>'. "正答率: ".$Data[0][$value].'%</br>';
         echo '</tr>';
         echo '</table>';
-    endforeach;
-    //debug($Data[3]['very_good']);
+        echo '<table border="1">';
+        echo '<tr>';
+        echo '<td>'. "項目難易度".$Data[0][$value].'</br>';
+        echo '<td>'. "項目識別度".$Data[1][$value].'</br>';
+        echo '<td>'. "項目注意度".$Data[2][$value].'</br>';
+        echo '</tr>';
+        echo '</table>';
+        echo '</div>';
+        echo "設問解答率分析図は受験者を5群に分けて群ごとに正答率をグラフにしたものです。";
+        echo "左側が低く、右側が高いと良い問題だといえるでしょう";
+        echo "<BR><BR>";
+        echo "<BR>".$description[$item_desc[0][$value]];
+        echo "<BR>".$description[$item_desc[1][$value]];
+        echo "<BR>".$description[$item_desc[2][$value]];
+?>
+    </p>
+    <p><a id="modal-close" class="button-link">閉じる</a></p>
+    </div>
 
-    echo "設問解答率分析図は受験者を5群に分けて群ごとに正答率をグラフにしたものです。<BR>";
-    echo "左側が低く、右側が高いと良い問題だといえるでしょう";
-    echo "<BR><BR>";
-    foreach($Data[3]['student_difficulty'][0] as $key => $value):
+    <table>
+    <tr>
+        <td>
+            <a class="modal button-link" data-target="<?php echo "modal-content-".$value;?>">
+    <?php
+    $key++;
+    $value++;
+    echo $key .". 項目 : ".$value;
     ?>
-<div id = "<?php echo "page".$key;?>" style = "margin-left: 30px;margin-right: 15px;width:400px; height:550px; float: left;">
-    <div id = "<?php echo "con2".$key;?>" style = "margin-left: 40px;width: 310px; height: 400px; float: left;"></div>
-    <script type = "text/javascript">
-    $(function(){
-        var charts = "<?php echo "#con2".$key;?>";
-        var item_number = "<?php echo $key + 1;?>";
-        //文字列でとってきているため数値型に変換しないといけない。1が上位5が下位
-        var item_1 = Number("<?php echo $Data[3]['student_difficulty'][0][$key];?>");
-        var item_2 = Number("<?php echo $Data[3]['student_difficulty'][1][$key];?>");
-        var item_3 = Number("<?php echo $Data[3]['student_difficulty'][2][$key];?>");
-        var item_4 = Number("<?php echo $Data[3]['student_difficulty'][3][$key];?>");
-        var item_5 = Number("<?php echo $Data[3]['student_difficulty'][4][$key];?>");
-        var item = [item_1,item_2,item_3,item_4,item_5];
-        $(charts).highcharts({
-            chart: {
-                type: 'line'
-            },
-            title: {
-                text: '設問解答率分析図 項目'+item_number
-            },
-            xAxis: {
-                categories: ['Lv1','Lv2','Lv3','Lv4','Lv5'],
-            },
-            yAxis: {
-                max:1,
-                min:0,
-                title: {
-                    text: '正答率'
-                }
-            },
-            plotOptions: {
-                line: {
-                    //color:'#000000',
-                    dataLabels: {
-                        enabled: true
-                    },
-                    enableMouseTracking: true
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            series: [{
-                name: "項目"+item_number,
-                data: [item_5, item_4, item_3, item_2, item_1]
-            }]
-        });
-    });
-    </script>
-<?php
-echo '<table>';
-echo '<tr>';
-echo '<td>'. "正解者数:".$Data[3]['item_right_sum'][$key].'</br>';
-echo '<td>'. "不正解者数:".$Data[3]['item_incorrect'][$key].'</br>';
-$Data[0][$key] = $Data[0][$key]*100;
-echo '<td>'. "正答率: ".$Data[0][$key].'%</br>';
-echo '</tr>';
-echo '</table>';
-echo '<table border="1">';
-echo '<tr>';
-echo '<td>'. "項目難易度".$Data[0][$key].'</br>';
-echo '<td>'. "項目識別度".$Data[1][$key].'</br>';
-echo '<td>'. "項目注意度".$Data[2][$key].'</br>';
-echo '</tr>';
-echo '</table>';
-echo '</div>';
-endforeach;
+            </a>
+    <?php echo "<BR>"."次回時の問題作成アドバイス：　"; ?>
+    <?php echo "<BR>".$advice[$item_connect[$value-1]]; ?>
+        </tr>
+    </table>
+    </p>
+    <?php
+    endforeach;
+    echo "<BR>";
+    //debug($Data[3]['very_good']);
 ?>
-	<table border="1">
-<?php
-/*
-    foreach($Data[0] as $key => $value){
-	echo '<tr>';
-    // echo '<td>'. "素点".$score[$key+1].'</td>'配列ナンバーなので+1している;
-    $number = $key + 1;
-    echo '<td>'. $number ."問目：項目難易度".$value.'</td>';
-    echo '<td>'. $number ."問目：項目識別度".$data[$key].'</td>';
-    echo '<td>'. $number ."問目：項目注意度".$Data[2][$key].'</td>';
-	echo '</tr>';
-	}
-    */
-?>
-
-</table>
 </ul>
 <div id="font_button", style="text-align:center;">
 <?php
-    echo $this->Form->postButton('作問アドバイス生成', array('controller' => 'Advices', 'action' => 'rule'));
-    echo $this->Form->end();
+    //echo $this->Form->postButton('作問アドバイス生成', array('controller' => 'Advices', 'action' => 'rule'));
+    //echo $this->Form->end();
 ?>
 </div>
 
