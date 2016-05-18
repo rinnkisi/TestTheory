@@ -1,6 +1,33 @@
 <?php
 class AdvicesController extends AppController{
+	public $uses = array('Advice','Description');
 	public $helpers = array('Form', 'Html', 'Js', 'Time');
+
+	public function form()
+	{
+		$this->set('data', $this->Session->read('session_data'));
+		if($this->Session->read('session_data'))
+		{
+			$data = array('Advice' => array('advice' => $this->Session->read('session_data')));
+			// 登録する項目（フィールド指定）
+			$fields = array('advice');
+			// 新規登録
+			$this->Advice->save($data, false, $fields);
+			//$this->Advice->save($this->Session->read('session_data'));
+			$this->Session->delete('session_data');
+		}
+		else{
+			if($this->request->is('post'))
+			{
+			 	//var_dump($this->request->data);
+				$this->Session->write('session_data', $this->request->data['Advice']['advice']);
+				$this->set('data', $this->Session->read('session_data'));
+
+				$this->redirect('form');
+				//$this->Article->save($this->data);
+			}
+		}
+	}
     public function login()
 	{
 
@@ -57,6 +84,23 @@ class AdvicesController extends AppController{
             $advices = $this->Advice->find('all');
             //アドバイスDBをセットする
             $this->set('Advice',$advices);
+			$description = $this->Description->find('all');
+			foreach($description as $key => $value):
+				 $description[$key] = $value['Description'];
+			endforeach;
+			$item_description =  $this->Advice->description_group($result);
+			foreach($description as $key => $value):
+				$description_index[$value['description_id']] = $value['description'];
+			endforeach;
+			$this->set('item_desc', $item_description );
+			$this->set('description', $description_index);
+
+			$item_connect = $this->Advice->item_connect($item_description);
+			foreach($advices as $key => $value):
+				$advice_id[$value['Advice']['advice_id']] = $value['Advice']['advice'];
+			endforeach;
+			$this->set('item_connect', $item_connect);
+			$this->set('advice', $advice_id);
 
             if($this->Advice->save($this->request->data))
 			{

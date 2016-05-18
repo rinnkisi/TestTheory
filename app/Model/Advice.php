@@ -3,14 +3,17 @@ App::uses('File', 'Utility');
 class Advice extends AppModel{
     public $useTable = 'advices';
     /* Data にはcsvファイルの情報が入っている */
+
+
     public function calculator($Data = null)
     {
         /* ここで使うのはAdvicesテーブル */
         $Advice = $this->find('all');
-        /* アドバイスの参照を行っている部分
+        /* アドバイスの参照を行っている部分        */
         foreach($Advice as $advice_value):
+            //debug($advice_value);
         endforeach;
-        */
+
         /* cakephpの File ユーティリティ(ファイルの読み書きやフォルダ内のファイル名一覧の取得) */
         $file = new File($Data['csv']['tmp_name']);
         /*  explode で改行がある時の列を配列として代入 */
@@ -23,7 +26,6 @@ class Advice extends AppModel{
             /*  1人毎の素点が帰ってくる */
             $score[$key] = $this->student_score($array_line, $key);
         endforeach;
-
         /* 人数や、平均点、最高点、など */
         $data['people'] = count($array_file);
         $data['average'] = $this->score_average($score, $data['people']);
@@ -44,8 +46,11 @@ class Advice extends AppModel{
         $data['low_score'] = min($score);
         $data['field'] = $data['top_score'] - $data['low_score'];
 
-        /*  問題数をとってくる関数 item_sumには正答数が入っている */
+        /*  問題数をとってくる関数 item_sumから正答数がとってきている */
         $item_right_sum = $this->item_sum($array_line);
+        $data['item_right_sum'] = $item_right_sum;
+        $item_incorrect = $this->item_incorrect($item_right_sum, $data['people']);
+        $data['item_incorrect'] = $item_incorrect;
         $data['item_sum'] = count($item_right_sum);
 
         /* 項目困難度の算出 */
@@ -62,7 +67,9 @@ class Advice extends AppModel{
         $under_difficulty = $this->accuracy_rate($array_file, $student_under);
         $item_discrimination = $this->item_discrimination($top_difficulty, $under_difficulty);
 
-        /* スコアを昇順にソートした結果を以下では用いる */
+        /* ヒストグラムを求める */
+        $data['score'] = $this->histogram($score, $data['item_sum']);
+        /* $scoreを代入スコアを昇順にソートした結果を以下では用いる */
         arsort($score);
 
         /* S-P表分析5群に分割 levelではそれぞれのソートで必要な値を決める */
@@ -73,6 +80,13 @@ class Advice extends AppModel{
         $sp_analysis = $this->sp_analysis($array_line, $student_key, $spitem_key);
         $item_caution_value = $this->item_caution_value($sp_analysis, $score, $item_right_sum, $spitem_key, $student_key);
 
+        /* 良い問題か悪い問題かを判断する */
+        $item_grouping = $this->item_grouping($item_difficulty, $item_discrimination, $item_caution_value);
+        //debug($item_grouping);
+        $data['bad'] = $item_grouping['bad'];
+        $data['very_bad'] = $item_grouping['very_bad'];
+        $data['good'] = $item_grouping['good'];
+        $data['very_good'] = $item_grouping['very_good'];
         /* 設問解答率分析図 */
         $select = $this->student_group($data['people'], 5);
         $analysis = $this->group_divide($score, $select);
@@ -244,9 +258,12 @@ class Advice extends AppModel{
     /* 中央値を求める。 */
     public function score_median($score = array()){
 		sort($score);
-		if (count($score) % 2 == 0){
+		if (count($score) % 2 == 0)
+        {
 			return (($score[(count($score) / 2) - 1] + $score[((count($score) / 2))]) / 2);
-		}else{
+		}
+        else
+        {
 			return ($score[floor(count($score)/2)]);
 		}
 	}
@@ -269,7 +286,7 @@ class Advice extends AppModel{
             $result[$key] = 0;
             foreach($value as $value_key => $value_number)
             {
-                if($value_number == !0 && $value_key != 0)
+                if($value_number != 0 && $value_key != 0)
                 {
                     $result[$key] += $item_right_sum[$value_key - 1];
                 }
@@ -295,7 +312,7 @@ class Advice extends AppModel{
             foreach($value as $value_key => $value_number)
             {
                 /*  value_key配列の0番目意外と外れ意外のとき条件文に入る */
-                if($value_number == !0 && $value_key != 0)
+                if($value_number != 0 && $value_key != 0)
                 {
                     /* 値があればそのまま足し算でなければ今のを入れる */
                     if(!empty($result[$value_key])){
@@ -382,6 +399,140 @@ class Advice extends AppModel{
             $result[$value] = $result_value[$key];
         }
         ksort($result);
+        return $result;
+    }
+    public function histogram($score = array(), $item_sum = null)
+    {
+        sort($score);
+        //debug($score);
+        $i = 0;
+        // 初期値は最小の値
+        $data_range = $score[0];
+        //切り捨てを行うために使用。
+        $digit = 10;
+        $data_range = (floor($data_range / $digit) * $digit);
+        //debug($data_range);
+        foreach($score as $key => $value):
+            if($value < ($data_range+$digit) && ($key+1) != count($score))
+            {
+                $i++;
+                continue;
+            }
+            else
+            {
+                if($data_range != $item_sum){
+                    $result['count'][$key] = $i;
+                    $result['number'][$key] = $data_range;
+                    //値が同じだった場合
+                    if($data_range == $value)
+                    {
+                        $value++;
+                    }
+                    $data_range = (floor($value / $digit) * $digit);
+                    if(($key+1) == count($score) && $item_sum == $data_range){
+                        $i = 1;
+                    }
+                }
+                if(($key+1) == count($score)){
+                    if($score[$key-1] == $score[$key] && $value == $item_sum){
+                        $i++;
+                        $result['count'][$key+1] = $i;
+                        $result['number'][$key+1] = $data_range;
+                        break;
+                    }
+                    if($value == $item_sum){
+                        $result['count'][$key+1] = $i;
+                        $result['number'][$key+1] = $data_range;
+                        break;
+                    }
+                    $i++;
+                    $result['count'][$key] = $i;
+                    $result['number'][$key] = $data_range;
+                }
+                $i = 1;
+                continue;
+            }
+        endforeach;
+        $result['count'] = array_merge($result['count']);
+        $result['number'] = array_merge($result['number']);
+        //debug($result);
+        return $result;
+    }
+    /* 不正解数を返す */
+    public function item_incorrect($item_right = array(), $people){
+        $result[] = 0;
+        foreach($item_right as $key => $value):
+            $result[$key] = $people - $value;
+        endforeach;
+        return $result;
+    }
+
+    public function item_grouping($diff, $disc, $caution){
+        $i = 0;
+        $j = 0;
+        foreach($diff as $key => $value):
+            if(($value < 0.4 || 0.8 <= $value) && $disc[$key] < 0.3 && 0.5 <= $caution[$key]){
+                $bad[$i] = $key + 1;
+                if(($value < 0.3 || 0.9 <= $value) && $disc[$key] < 0.2 && 0.75 <= $caution[$key]){
+                    $very_bad[$i] = $key + 1;
+                }
+                $i++;
+            }
+            if(0.4 <= $value && $value < 0.8 && (0.3 <= $disc[$key] || $disc[$key] < 0.4) && $caution[$key] < 0.5){
+                $good[$j] = $key + 1;
+                if(0.4 <= $value && $value < 0.8 && 0.4 <= $disc[$key] && $caution[$key] < 0.5){
+                    $very_good[$j] = $key + 1;
+                }
+                $j++;
+            }
+        endforeach;
+        $bad = array_values($bad);
+        $very_bad = array_values($very_bad);
+        $good = array_values($good);
+        $very_good = array_values($very_good);
+        return array('bad' => $bad, 'very_bad' => $very_bad,
+         'good' => $good, 'very_good' => $very_good);
+    }
+
+//項目説明データベース用
+    public function description_group($data = array())
+    {
+        foreach($data[0] as $key => $value):
+            if($value < 0.3){
+                $result[0][$key] = '1a';
+            }else if($value < 0.4){
+                $result[0][$key] = '1b';
+            }else if(0.8 <= $value){
+                $result[0][$key] = '1c';
+            }else if(0.9 <= $value){
+                $result[0][$key] = '1d';
+            }else{
+                $result[0][$key] = '1e';
+            }
+            if($data[1][$key] < 0.2){
+                $result[1][$key] = '2a';
+            }else if($data[1][$key] < 0.3){
+                $result[1][$key] = '2b';
+            }else if(0.3 <= $data[1][$key] && $data[1][$key] < 0.4){
+                $result[1][$key] = '2c';
+            }else{
+                $result[1][$key] = '2d';
+            }
+            if(0.75 <= $data[2][$key]){
+                $result[2][$key] = '3a';
+            }else if(0.5 <= $data[2][$key] && $data[2][$key] < 0.75){
+                $result[2][$key] = '3b';
+            }else{
+                $result[2][$key] = '3c';
+            }
+        endforeach;
+        return $result;
+    }
+    public function item_connect($item = array())
+    {
+        foreach($item[0] as $key => $value):
+             $result[$key] = $value.$item[1][$key].$item[2][$key];
+        endforeach;
         return $result;
     }
     /*  CSVファイルの場合は0を返す */
